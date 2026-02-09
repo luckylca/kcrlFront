@@ -1,50 +1,61 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import CustomTabBar from '../components/CustomTabBar';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import HomeScreen from '../screens/HomeScreen';
-import UserScreen from '../screens/UserScreen';
+import CommunityScreen from '../screens/CommunityScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import AboutScreen from '../screens/AboutScreen';
+import KeyConfigScreen from '../screens/KeyConfigScreen';
 
 
 // 1. 定义路由参数列表
 export type RootStackParamList = {
     MainTabs: undefined;
-    Settings: undefined;
+    About: undefined;
+    KeyConfig: undefined;
 };
 
 // 2. 定义 Tab 参数列表
 export type TabParamList = {
     Home: undefined;
-    User: undefined;
+    Community: undefined;
+    Setting: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createMaterialBottomTabNavigator<TabParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
 
 // 3. 创建 Tab 导航器
 const TabNavigator = () => {
     return (
-        <Tab.Navigator>
+        <Tab.Navigator
+            tabBar={props => <CustomTabBar {...props} />}
+            screenOptions={{
+                headerShown: false,
+            }}
+        >
             <Tab.Screen
                 name="Home"
                 component={HomeScreen}
                 options={{
                     tabBarLabel: '首页',
-                    tabBarIcon: ({ color }) => (
-                        <MaterialCommunityIcons name="home" color={color} size={26} />
-                    ),
                 }}
             />
             <Tab.Screen
-                name="User"
-                component={UserScreen}
+                name="Community"
+                component={CommunityScreen}
                 options={{
-                    tabBarLabel: '我的',
-                    tabBarIcon: ({ color }) => (
-                        <MaterialCommunityIcons name="account" color={color} size={26} />
-                    ),
+                    tabBarLabel: '社区',
+                }}
+            />
+            <Tab.Screen
+                name="Setting"
+                component={SettingsScreen}
+                options={{
+                    tabBarLabel: '设置',
                 }}
             />
         </Tab.Navigator>
@@ -61,6 +72,14 @@ const RootNavigator = () => {
             <Stack.Screen
                 name="Settings"
                 component={SettingsScreen}
+            />
+            <Stack.Screen
+                name="About"
+                component={AboutScreen}
+            />
+            <Stack.Screen
+                name="KeyConfig"
+                component={KeyConfigScreen}
             />
         </Stack.Navigator>
     );
