@@ -9,6 +9,10 @@ import CommunityScreen from '../screens/CommunityScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AboutScreen from '../screens/AboutScreen';
 import KeyConfigScreen from '../screens/KeyConfigScreen';
+import DevicePathScreen from '../screens/DevicePathScreen';
+import TimeConfigScreen from '../screens/TimeConfigScreen';
+import ThemeSettingsScreen from '../screens/ThemeSettingsScreen';
+import ScriptConfigScreen from '../screens/ScriptConfigScreen';
 
 
 // 1. 定义路由参数列表
@@ -16,6 +20,11 @@ export type RootStackParamList = {
     MainTabs: undefined;
     About: undefined;
     KeyConfig: undefined;
+    DevicePath: undefined;
+    TimeConfig: undefined;
+    ThemeSettings: undefined;
+    ScriptConfig: undefined;
+    Setting: undefined;
 };
 
 // 2. 定义 Tab 参数列表
@@ -70,7 +79,7 @@ const RootNavigator = () => {
                 component={TabNavigator}
             />
             <Stack.Screen
-                name="Settings"
+                name="Setting"
                 component={SettingsScreen}
             />
             <Stack.Screen
@@ -80,6 +89,22 @@ const RootNavigator = () => {
             <Stack.Screen
                 name="KeyConfig"
                 component={KeyConfigScreen}
+            />
+            <Stack.Screen
+                name="DevicePath"
+                component={DevicePathScreen}
+            />
+            <Stack.Screen
+                name="TimeConfig"
+                component={TimeConfigScreen}
+            />
+            <Stack.Screen
+                name="ThemeSettings"
+                component={ThemeSettingsScreen}
+            />
+            <Stack.Screen
+                name="ScriptConfig"
+                component={ScriptConfigScreen}
             />
         </Stack.Navigator>
     );

@@ -3,8 +3,9 @@ import React, { useEffect, useRef } from 'react';
 import { View, ScrollView, StyleSheet, Animated, Linking, Easing, Dimensions } from 'react-native';
 import { Card, Text, Button, useTheme, Avatar, TouchableRipple, Surface } from 'react-native-paper';
 import ActionCard from './component/ActionCard';
+import { Appbar } from 'react-native-paper';
 
-const AboutScreen = () => {
+const AboutScreen = ({ navigation }: any) => {
     const theme = useTheme();
 
     // Animation values for staggered entry
@@ -89,8 +90,10 @@ const AboutScreen = () => {
             contentContainerStyle={styles.contentContainer}
             showsVerticalScrollIndicator={false}
         >
-            <View style={styles.headerSpacer} />
-
+            <Appbar.Header>
+                <Appbar.BackAction onPress={() => navigation.goBack()} />
+                <Appbar.Content title="关于" />
+            </Appbar.Header>
             {/* 1. Project Info Card */}
             <AnimatedWrapper index={0} style={styles.cardWrapper}>
                 <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
@@ -179,7 +182,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     contentContainer: {
-        paddingTop: 50,
         paddingHorizontal: 16,
         paddingBottom: 120, // Increased to clear floating tab bar
     },

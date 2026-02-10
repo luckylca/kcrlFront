@@ -120,38 +120,6 @@ const HomeScreen = ({ navigation }: any) => {
                     </Surface>
                 </Animated.View>
 
-                {/* 2. Control Card */}
-                <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], marginTop: 24 }}>
-                    <Surface style={[styles.controlCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
-                        <View style={styles.cardHeader}>
-                            <Text variant="titleLarge" style={{ fontWeight: 'bold' }}>控制</Text>
-                        </View>
-                        <View style={styles.buttonRow}>
-                            <Button
-                                mode="contained"
-                                onPress={() => setIsServiceRunning(true)}
-                                style={[styles.controlButton, { backgroundColor: activeColor, flex: 1, marginRight: 8 }]}
-                                icon="play"
-                                contentStyle={{ height: 55 }}
-                                disabled={isServiceRunning}
-                            >
-                                开启服务
-                            </Button>
-                            <Button
-                                mode="outlined"
-                                onPress={() => setIsServiceRunning(false)}
-                                style={[styles.controlButton, { borderColor: inactiveColor, flex: 1, marginLeft: 8 }]}
-                                textColor={inactiveColor}
-                                icon="stop"
-                                disabled={!isServiceRunning}
-                                contentStyle={{ height: 55 }}
-                            >
-                                停止服务
-                            </Button>
-                        </View>
-                    </Surface>
-                </Animated.View>
-
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], marginTop: 24 }}>
                     <Surface style={[styles.navCard, { backgroundColor: theme.colors.secondaryContainer }]} elevation={1}>
                         <TouchableRipple
