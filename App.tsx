@@ -7,68 +7,80 @@ import RootNavigator from './src/navigation';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme, adaptNavigationTheme } from 'react-native-paper';
 import { useSettingStore } from './src/store/useSettingStore';
 
+import Utest, {testable} from './src/screens/Utest/libUtest.tsx';
+
+
+
 const { LightTheme, DarkTheme } = adaptNavigationTheme({
 	reactNavigationLight: NavDefaultTheme,
 	reactNavigationDark: NavDarkTheme,
 });
 
 function App() {
-	const isDarkMode = useSettingStore((state) => state.isDarkMode);
-	const themeColor = useSettingStore((state) => state.themeColor);
-	const backgroundImage = useSettingStore((state) => state.backgroundImage);
-	const backgroundOpacity = useSettingStore((state) => state.backgroundOpacity);
+  if (testable) return <Utest />;
 
-	// Dynamic Theme Construction
-	const baseTheme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
-	const navTheme = isDarkMode ? DarkTheme : LightTheme;
+  const isDarkMode = useSettingStore(state => state.isDarkMode);
+  const themeColor = useSettingStore(state => state.themeColor);
+  const backgroundImage = useSettingStore(state => state.backgroundImage);
+  const backgroundOpacity = useSettingStore(state => state.backgroundOpacity);
 
-	const theme = {
-		...baseTheme,
-		colors: {
-			...baseTheme.colors,
-			primary: themeColor,
-			primaryContainer: isDarkMode ? undefined : themeColor + '20', // rough approximation for container
-			// We can add more color derivation logic here if needed, 
-			// but for "simple", overriding primary is the biggest impact.
-		},
-	};
+  // Dynamic Theme Construction
+  const baseTheme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
+  const navTheme = isDarkMode ? DarkTheme : LightTheme;
 
-	const combinedTheme = {
-		...navTheme,
-		...theme,
-		colors: {
-			...navTheme.colors,
-			...theme.colors,
-		},
-	};
+  const theme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      primary: themeColor,
+      primaryContainer: isDarkMode ? undefined : themeColor + '20', // rough approximation for container
+      // We can add more color derivation logic here if needed,
+      // but for "simple", overriding primary is the biggest impact.
+    },
+  };
 
-	return (
-		<SafeAreaProvider>
-			<StatusBar
-				barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-				backgroundColor="transparent"
-				translucent={true}
-			/>
-			<PaperProvider theme={theme}>
-				{/* Global Background Image Layer */}
-				{backgroundImage ? (
-					<View style={StyleSheet.absoluteFill}>
-						<ImageBackground
-							source={{ uri: backgroundImage }}
-							style={{ flex: 1 }}
-							resizeMode="cover"
-						>
-							<View style={{ flex: 1, backgroundColor: theme.colors.background, opacity: 1 - backgroundOpacity }} />
-						</ImageBackground>
-					</View>
-				) : null}
+  const combinedTheme = {
+    ...navTheme,
+    ...theme,
+    colors: {
+      ...navTheme.colors,
+      ...theme.colors,
+    },
+  };
 
-				<NavigationContainer theme={combinedTheme}>
-					<RootNavigator />
-				</NavigationContainer>
-			</PaperProvider>
-		</SafeAreaProvider>
-	);
+  return (
+    <SafeAreaProvider>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <PaperProvider theme={theme}>
+        {/* Global Background Image Layer */}
+        {backgroundImage ? (
+          <View style={StyleSheet.absoluteFill}>
+            <ImageBackground
+              source={{ uri: backgroundImage }}
+              style={{ flex: 1 }}
+              resizeMode="cover"
+            >
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: theme.colors.background,
+                  opacity: 1 - backgroundOpacity,
+                }}
+              />
+            </ImageBackground>
+          </View>
+        ) : null}
+
+        <NavigationContainer theme={combinedTheme}>
+          <RootNavigator />
+        </NavigationContainer>
+      </PaperProvider>
+    </SafeAreaProvider>
+  );
 }
 
 export default App;
