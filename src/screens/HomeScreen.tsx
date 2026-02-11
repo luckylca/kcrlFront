@@ -84,6 +84,14 @@ const HomeScreen = ({ navigation }: any) => {
         ]).start();
     }, [fadeAnim, slideAnim]);
 
+    const statusCardPress = () => {
+        if (isServiceRunning) {
+            setIsServiceRunning(false);
+        } else {
+            setIsServiceRunning(true);
+        }
+    };
+
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 + insets.bottom, paddingTop: insets.top + 20 }}>
@@ -94,7 +102,7 @@ const HomeScreen = ({ navigation }: any) => {
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
                     <Surface style={[styles.statusCard, { backgroundColor: statusColor }]} elevation={4}>
                         <TouchableRipple
-                            onPress={() => console.log('Status Card Pressed')}
+                            onPress={() => statusCardPress()}
                             style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center' }}
                             rippleColor="rgba(255, 255, 255, 0.2)"
                             borderless={true}
@@ -112,7 +120,7 @@ const HomeScreen = ({ navigation }: any) => {
                                         {statusText}
                                     </Text>
                                     <Text variant="bodyLarge" style={{ color: 'rgba(255,255,255,0.8)', marginTop: 8 }}>
-                                        {isServiceRunning ? '服务已经开启' : '服务未开启，请点击检查权限'}
+                                        {isServiceRunning ? '服务已经开启,可点击关闭' : '服务未开启，请点击检查服务状态'}
                                     </Text>
                                 </View>
                             </View>
