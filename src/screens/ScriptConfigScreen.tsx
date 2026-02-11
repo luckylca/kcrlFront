@@ -8,6 +8,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useScriptStore, ScriptStep, ScriptType } from '../store/useScriptStore';
 import { useNavigation } from '@react-navigation/native';
 
+import RNFS from 'react-native-fs';
+import { generateShellScript } from '../utils/scriptGenerator';
+
 // ------------------------------------------------------------------
 // Template Data
 // ------------------------------------------------------------------
@@ -94,8 +97,6 @@ const ScriptConfigScreen = () => {
     // Initialize local state from store
     useEffect(() => {
         setLocalScripts(savedScripts);
-        // We don't necessarily need to sync name here anymore if we only ask on save, 
-        // but it's good to know what we are working on.
         setSaveName(currentScriptName);
     }, [savedScripts, currentScriptName]);
 
@@ -110,19 +111,19 @@ const ScriptConfigScreen = () => {
         setLocalScripts([...localScripts, newStep]);
     };
 
-    // Remove Item
+    // 删除对象
     const handleRemoveItem = useCallback((id: string) => {
         setLocalScripts(prev => prev.filter((item) => item.id !== id));
     }, []);
 
-    // Update Item Command
+    // 更新命令
     const handleUpdateCommand = useCallback((id: string, text: string) => {
         setLocalScripts(prev =>
             prev.map((item) => (item.id === id ? { ...item, command: text } : item))
         );
     }, []);
 
-    // Open Save Dialog
+    // 打开保存对话框
     const handleOpenSaveDialog = () => {
         if (localScripts.length === 0) {
             setConfirmDialog({
@@ -138,8 +139,21 @@ const ScriptConfigScreen = () => {
         setIsSaveDialogVisible(true);
     };
 
+    const exportScript = async () => {
+        const shellScript = generateShellScript(localScripts);
+        const fileName = `${saveName || 'script'}.sh`;
+        const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+        await RNFS.writeFile(filePath, shellScript, 'utf8')
+            .then(() => {
+                console.log('Script exported successfully:', filePath);
+            })
+            .catch((error) => {
+                console.error('Error exporting script:', error);
+            });
+    };
+
     // Confirm Save
-    const handleConfirmSave = () => {
+    const handleConfirmSave = async () => {
         if (!saveName.trim()) {
             setSaveError('请输入脚本名称');
             return;
@@ -147,6 +161,7 @@ const ScriptConfigScreen = () => {
 
         saveScript(saveName, localScripts);
         setCurrentScriptName(saveName);
+        await exportScript();
         setIsSaveDialogVisible(false);
     };
 
@@ -191,7 +206,7 @@ const ScriptConfigScreen = () => {
         });
     };
 
-    // Render Item
+    // 单个卡片
     const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<ScriptStep>) => {
         let borderLeftColor = theme.colors.outline;
         if (item.type === 'logic') borderLeftColor = theme.colors.tertiary;
