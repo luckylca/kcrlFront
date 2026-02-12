@@ -5656,7 +5656,7 @@ react-native-screens@^4.23.0:
 
 react-native-tcp-socket@^6.4.1:
   version "6.4.1"
-  resolved "https://registry.npmmirror.com/react-native-tcp-socket/-/react-native-tcp-socket-6.4.1.tgz"
+  resolved "https://registry.npmmirror.com/react-native-tcp-socket/-/react-native-tcp-socket-6.4.1.tgz#e33eec5648cbb226f79dda366bc294395a86d272"
   integrity sha512-2+zya9ielB8nWfMYVULB64ZqLzQD32qIzTnDef7NM1BChaJiA1btkJTBL+8WnyBrujjlCBVxBC3gAkXtG5hmvQ==
   dependencies:
     buffer "^5.4.3"

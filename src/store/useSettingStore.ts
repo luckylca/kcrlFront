@@ -12,6 +12,11 @@ interface KeyEvent {
     long_press: string;
 }
 
+interface Device {
+    path: string;
+    name: string;
+}
+
 interface SettingState {
     logRecord: boolean;
     setLogRecord: (value: boolean) => void;
@@ -34,6 +39,9 @@ interface SettingState {
     setLongPressThreshold: (value: number) => void;
     doubleClickInterval: number;
     setDoubleClickInterval: (value: number) => void;
+
+    allDevices: Device[];
+    setAllDevices: (value: Device[]) => void;
 
     //CPPAPIConfig剩下的东西
     device: string[];
@@ -73,8 +81,11 @@ export const useSettingStore = create<SettingState>((set) => ({
     doubleClickInterval: 300,
     setDoubleClickInterval: (value: number) => set(() => ({ doubleClickInterval: value })),
 
+    allDevices: [],
+    setAllDevices: (value: Device[]) => set(() => ({ allDevices: value })),
+
     //CPPAPIConfig剩下的东西
-    device: ['/dev/input/event0'],
+    device: [],
     setDevice: (value: string[]) => set(() => ({ device: value })),
     name: 'sample_name',
     setName: (value: string) => set(() => ({ name: value })),

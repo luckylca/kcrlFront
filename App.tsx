@@ -7,13 +7,13 @@ import RootNavigator from './src/navigation';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme, adaptNavigationTheme } from 'react-native-paper';
 import { useSettingStore } from './src/store/useSettingStore';
 
-import Utest, {testable} from './src/screens/Utest/libUtest.tsx';
+import Utest, { testable } from './src/screens/Utest/libUtest.tsx';
 
 
 
 const { LightTheme, DarkTheme } = adaptNavigationTheme({
-	reactNavigationLight: NavDefaultTheme,
-	reactNavigationDark: NavDarkTheme,
+  reactNavigationLight: NavDefaultTheme,
+  reactNavigationDark: NavDarkTheme,
 });
 
 function App() {
@@ -80,6 +80,7 @@ function App() {
         </NavigationContainer>
       </PaperProvider>
     </SafeAreaProvider>
+    // <Utest />
   );
 }
 

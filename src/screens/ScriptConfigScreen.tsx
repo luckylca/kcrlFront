@@ -30,10 +30,37 @@ const TEMPLATE_LIBRARY: TemplateCategory[] = [
     {
         title: '逻辑控制',
         data: [
-            { type: 'logic', name: 'If 条件', command: 'if [ condition ]; then', icon: 'call-split' },
-            { type: 'logic', name: 'Else 分支', command: 'else', icon: 'call-merge' },
-            { type: 'logic', name: 'Loop 循环', command: 'for i in {1..10}; do', icon: 'refresh' },
+            { type: 'logic', name: 'If 条件起始', command: 'if [ condition ]; then', icon: 'call-split' },
+            { type: 'logic', name: 'Else 执行起始', command: 'else', icon: 'call-merge' },
+            { type: 'logic', name: 'Else 执行闭环', command: '', icon: 'call-missed' },
+            { type: 'logic', name: 'If 条件闭环', command: 'fi', icon: 'close-circle-outline' },
+            { type: 'logic', name: 'Loop 循环起始', command: 'for i in {1..10}; do', icon: 'refresh' },
+            { type: 'logic', name: 'Loop 循环闭环', command: 'done', icon: 'check-circle-outline' },
             { type: 'logic', name: 'Delay 延时', command: 'sleep 1', icon: 'clock-outline' },
+        ],
+    },
+    {
+        title: '系统控制',
+        data: [
+            { type: 'system', name: 'WiFi 开', command: 'svc wifi enable', icon: 'wifi' },
+            { type: 'system', name: 'WiFi 关', command: 'svc wifi disable', icon: 'wifi-off' },
+            { type: 'system', name: '蓝牙 开', command: 'svc bluetooth enable', icon: 'bluetooth' },
+            { type: 'system', name: '蓝牙 关', command: 'svc bluetooth disable', icon: 'bluetooth-off' },
+            { type: 'system', name: 'GPS 高精度', command: 'settings put secure location_mode 3', icon: 'crosshairs-gps' },
+            { type: 'system', name: 'GPS 关', command: 'settings put secure location_mode 0', icon: 'gps-off' },
+            { type: 'system', name: '手电筒 开', command: 'cmd camera set-torch-mode 0 on', icon: 'flashlight' },
+            { type: 'system', name: '手电筒 关', command: 'cmd camera set-torch-mode 0 off', icon: 'flashlight-off' },
+            { type: 'system', name: '免打扰 开', command: 'settings put global zen_mode 1', icon: 'bell-off' },
+            { type: 'system', name: '免打扰 关', command: 'settings put global zen_mode 0', icon: 'bell-ring' },
+            { type: 'system', name: '一键静音', command: 'input keyevent 164', icon: 'volume-mute' },
+            { type: 'system', name: '音量 +', command: 'input keyevent 24', icon: 'volume-plus' },
+            { type: 'system', name: '音量 -', command: 'input keyevent 25', icon: 'volume-minus' },
+            { type: 'system', name: '飞行模式 开', command: 'settings put global airplane_mode_on 1; am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true', icon: 'airplane' },
+            { type: 'system', name: '飞行模式 关', command: 'settings put global airplane_mode_on 0; am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false', icon: 'airplane-off' },
+            { type: 'system', name: '省电模式 开', command: 'cmd power set-mode 1', icon: 'battery-alert' },
+            { type: 'system', name: '省电模式 关', command: 'cmd power set-mode 0', icon: 'battery-charging' },
+            { type: 'system', name: '个人热点设置', command: 'am start -n com.android.settings/.TetherSettings', icon: 'wifi-star' },
+            { type: 'system', name: '启动应用', command: 'am start -n package/activity', icon: 'rocket-launch' },
         ],
     },
     {
@@ -42,15 +69,14 @@ const TEMPLATE_LIBRARY: TemplateCategory[] = [
             { type: 'function', name: '点击', command: 'input tap x y', icon: 'cursor-default-click' },
             { type: 'function', name: '滑动', command: 'input swipe x1 y1 x2 y2 duration', icon: 'gesture-swipe' },
             { type: 'function', name: '输入文本', command: 'input text "hello"', icon: 'keyboard' },
-            { type: 'function', name: '启动应用', command: 'am start -n package/activity', icon: 'rocket-launch' },
         ],
     },
     {
         title: '多媒体',
         data: [
             { type: 'music', name: '播放/暂停', command: 'input keyevent 85', icon: 'play-pause' },
-            { type: 'music', name: '音量+', command: 'input keyevent 24', icon: 'volume-plus' },
-            { type: 'music', name: '音量-', command: 'input keyevent 25', icon: 'volume-minus' },
+            { type: 'music', name: '下一首', command: 'input keyevent 87', icon: 'skip-next' },
+            { type: 'music', name: '上一首', command: 'input keyevent 88', icon: 'skip-previous' },
             { type: 'music', name: '截图', command: 'screencap -p /sdcard/screen.png', icon: 'camera' },
         ],
     },
@@ -80,6 +106,12 @@ const ScriptConfigScreen = () => {
     const [localScripts, setLocalScripts] = useState<ScriptStep[]>([]);
     const [activeTab, setActiveTab] = useState<'templates' | 'saved'>('templates');
 
+    const initialCollapsedState = TEMPLATE_LIBRARY.reduce((acc, category) => {
+        acc[category.title] = true;
+        return acc;
+    }, {} as Record<string, boolean>);
+    const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>(initialCollapsedState);
+
     // Dialog State
     // Generic Confirmation Dialog
     const [confirmDialog, setConfirmDialog] = useState<{
@@ -100,7 +132,7 @@ const ScriptConfigScreen = () => {
         setSaveName(currentScriptName);
     }, [savedScripts, currentScriptName]);
 
-    // Add Item from Template
+    // Format new item
     const handleAddTemplate = (template: TemplateItem) => {
         const newStep: ScriptStep = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
@@ -109,6 +141,14 @@ const ScriptConfigScreen = () => {
             command: template.command,
         };
         setLocalScripts([...localScripts, newStep]);
+    };
+
+    // Toggle Category
+    const toggleCategory = (title: string) => {
+        setCollapsedCategories(prev => ({
+            ...prev,
+            [title]: !prev[title]
+        }));
     };
 
     // 删除对象
@@ -212,6 +252,7 @@ const ScriptConfigScreen = () => {
         if (item.type === 'logic') borderLeftColor = theme.colors.tertiary;
         if (item.type === 'function') borderLeftColor = theme.colors.primary;
         if (item.type === 'music') borderLeftColor = theme.colors.secondary;
+        if (item.type === 'system') borderLeftColor = theme.colors.error;
 
         return (
             <ScaleDecorator>
@@ -287,28 +328,42 @@ const ScriptConfigScreen = () => {
                         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
                             {activeTab === 'templates' ? (
                                 // Template List
-                                TEMPLATE_LIBRARY.map((category, index) => (
-                                    <View key={index} style={styles.categoryBlock}>
-                                        <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8, paddingLeft: 8 }}>
-                                            {category.title}
-                                        </Text>
-                                        {category.data.map((template, tIndex) => (
+                                TEMPLATE_LIBRARY.map((category, index) => {
+                                    const isCollapsed = collapsedCategories[category.title];
+                                    return (
+                                        <View key={index} style={styles.categoryBlock}>
                                             <TouchableOpacity
-                                                key={tIndex}
-                                                style={[styles.templateItem, { backgroundColor: theme.colors.surfaceVariant }]}
-                                                onPress={() => handleAddTemplate(template)}
-                                                activeOpacity={0.7}
+                                                onPress={() => toggleCategory(category.title)}
+                                                style={{ flexDirection: 'row', alignItems: 'center', padding: 8, marginBottom: 4 }}
                                             >
-                                                <MaterialCommunityIcons name={template.icon} size={18} color={theme.colors.onSurface} />
-                                                <Text variant="bodySmall" numberOfLines={1} style={{ marginLeft: 8, flex: 1 }}>
-                                                    {template.name}
+                                                <MaterialCommunityIcons
+                                                    name={isCollapsed ? "chevron-right" : "chevron-down"}
+                                                    size={20}
+                                                    color={theme.colors.onSurfaceVariant}
+                                                />
+                                                <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginLeft: 4, fontWeight: 'bold' }}>
+                                                    {category.title}
                                                 </Text>
-                                                <MaterialCommunityIcons name="plus-circle-outline" size={16} color={theme.colors.primary} />
                                             </TouchableOpacity>
-                                        ))}
-                                        <Divider style={{ marginVertical: 12 }} />
-                                    </View>
-                                ))
+
+                                            {!isCollapsed && category.data.map((template, tIndex) => (
+                                                <TouchableOpacity
+                                                    key={tIndex}
+                                                    style={[styles.templateItem, { backgroundColor: theme.colors.surfaceVariant, marginLeft: 1 }]}
+                                                    onPress={() => handleAddTemplate(template)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    {/* <MaterialCommunityIcons name={template.icon} size={18} color={theme.colors.onSurface} /> */}
+                                                    <Text variant="bodySmall" numberOfLines={1} style={{ marginLeft: 8, flex: 1 }}>
+                                                        {template.name}
+                                                    </Text>
+                                                    {/* <MaterialCommunityIcons name="plus-circle-outline" size={16} color={theme.colors.primary} /> */}
+                                                </TouchableOpacity>
+                                            ))}
+                                            <Divider style={{ marginVertical: 12 }} />
+                                        </View>
+                                    );
+                                })
                             ) : (
                                 // Saved Scripts List
                                 <View>
