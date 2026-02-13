@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, InteractionManager } from 'react-native';
 import { Appbar, Text, useTheme, IconButton, Surface, Divider, Portal, ActivityIndicator } from 'react-native-paper';
 import { useSettingStore } from '../store/useSettingStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,7 +27,11 @@ const DevicePathScreen = ({ navigation }: any) => {
         setLoading(true);
         setError(null);
         setDevices([]);
-
+        if (allDevices.length > 0) {
+            setLoading(false);
+            setDevices(allDevices);
+            return;
+        }
         try {
             // 创建 CPPAPISocket 实例
             const socket = new CPPAPISocket();
@@ -44,7 +48,14 @@ const DevicePathScreen = ({ navigation }: any) => {
         }
     };
     React.useEffect(() => {
-        fetchDevices();
+        // 2. 使用 runAfterInteractions 包裹
+        // 这意味着：等导航动画完全结束了，再执行里面的代码
+        const task = InteractionManager.runAfterInteractions(() => {
+            fetchDevices();
+        });
+
+        // 清理函数：如果用户在加载前就退出了，取消任务
+        return () => task.cancel();
     }, []);
 
     return (

@@ -110,6 +110,14 @@ export const useSettingStore = create<SettingState>()(
                 backgroundOpacity: state.backgroundOpacity,
                 allDevices: state.allDevices,
                 keyevent: state.keyevent,
+                device: state.device,
+                name: state.name,
+                clickThreshold: state.clickThreshold,
+                shortPressThreshold: state.shortPressThreshold,
+                longPressThreshold: state.longPressThreshold,
+                doubleClickInterval: state.doubleClickInterval,
+                enable_log: state.enable_log,
+                cpu_affinity: state.cpu_affinity,
             }),
         }
     )
@@ -140,7 +148,7 @@ const saveToFile = async (state: SettingState) => {
     config.keyevent = state.keyevent;
 
     const text = config.save();
-    const path = `${RNFS.DocumentDirectoryPath}/kctrl.conf`;
+    const path = `${RNFS.ExternalDirectoryPath}/kctrl.conf`;
 
     try {
         // 4. 写入文件 (UTF-8 编码)

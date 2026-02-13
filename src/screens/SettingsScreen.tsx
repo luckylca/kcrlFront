@@ -5,7 +5,7 @@ import { View, StyleSheet, ScrollView, Animated, Dimensions, Easing } from 'reac
 import { Text, Switch, Surface, TouchableRipple, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import { useSettingStore } from '../store/useSettingStore';
 // ------------------------------------------------------------------
 // Types
 // ------------------------------------------------------------------
@@ -63,11 +63,11 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
                     easing: Easing.out(Easing.back(1.5)), // Slight bounce
                 }),
             ]).start();
-
-            return () => {
-                // Cleanup if needed
-                fadeAnim.setValue(0);
-            };
+            return undefined;
+            // return () => {
+            //     // Cleanup if needed
+            //     fadeAnim.setValue(0);
+            // };
         }, [index, fadeAnim, slideAnim])
     );
 
@@ -177,11 +177,8 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
 // ------------------------------------------------------------------
 const SettingsScreen = ({ navigation }: any) => {
     const insets = useSafeAreaInsets();
-
+    const settingStore = useSettingStore();
     const theme = useTheme();
-
-    // State for Toggles
-    const [isLogEnabled, setIsLogEnabled] = useState(false);
 
     // Configuration Items
     const settingsItems: SettingsItemType[] = [
@@ -223,8 +220,8 @@ const SettingsScreen = ({ navigation }: any) => {
             subtitle: '启用系统日志记录',
             icon: 'file-document-outline',
             type: 'toggle',
-            value: isLogEnabled,
-            onToggle: (val) => setIsLogEnabled(val),
+            value: settingStore.enable_log,
+            onToggle: (val) => settingStore.setEnableLog(val),
         },
         {
             id: 'send_logs',
