@@ -28,23 +28,27 @@ function App() {
   const baseTheme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
   const navTheme = isDarkMode ? DarkTheme : LightTheme;
 
+  // If a background image is present, the app's "background" color needs to be transparent
+  // so the image (rendered below) is visible.
+  // The "tint" or "opacity" is handled by the View overlaying the image.
+  const appBackgroundColor = backgroundImage ? 'transparent' : baseTheme.colors.background;
+
   const theme = {
     ...baseTheme,
     colors: {
       ...baseTheme.colors,
       primary: themeColor,
-      primaryContainer: isDarkMode ? undefined : themeColor + '20', // rough approximation for container
-      // We can add more color derivation logic here if needed,
-      // but for "simple", overriding primary is the biggest impact.
+      primaryContainer: isDarkMode ? undefined : themeColor + '20',
+      background: appBackgroundColor, // Make transparent if BG image exists
     },
   };
 
   const combinedTheme = {
     ...navTheme,
-    ...theme,
     colors: {
       ...navTheme.colors,
       ...theme.colors,
+      background: appBackgroundColor, // Apply to NavigationContainer as well
     },
   };
 
@@ -67,8 +71,8 @@ function App() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: theme.colors.background,
-                  opacity: 1 - backgroundOpacity,
+                  backgroundColor: baseTheme.colors.background, // Use original opaque color for the tint
+                  opacity: backgroundOpacity,
                 }}
               />
             </ImageBackground>

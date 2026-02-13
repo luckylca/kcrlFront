@@ -41,8 +41,8 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <Appbar.Header>
+        <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+            <Appbar.Header style={{ backgroundColor: 'transparent' }}>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="主题设置" />
             </Appbar.Header>
@@ -50,7 +50,7 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
             <ScrollView contentContainerStyle={styles.content}>
 
                 {/* 1. Dark Mode Toggle */}
-                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant }]} elevation={1}>
+                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, opacity: 0.9 }]} elevation={1}>
                     <View style={styles.row}>
                         <View>
                             <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>黑夜模式</Text>
@@ -61,7 +61,7 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
                 </Surface>
 
                 {/* 2. Theme Color Picker */}
-                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, marginTop: 16 }]} elevation={1}>
+                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, marginTop: 16, opacity: 0.9 }]} elevation={1}>
                     <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 16 }}>主题颜色</Text>
                     <View style={styles.colorRow}>
                         {COLOR_PRESETS.map((color) => (
@@ -83,7 +83,7 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
                 </Surface>
 
                 {/* 3. Global Background Image */}
-                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, marginTop: 16 }]} elevation={1}>
+                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, marginTop: 16, opacity: 0.9 }]} elevation={1}>
                     <View style={styles.row}>
                         <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>全局背景图</Text>
                         {backgroundImage && (

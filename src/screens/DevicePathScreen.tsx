@@ -54,12 +54,12 @@ const DevicePathScreen = ({ navigation }: any) => {
                     <ActivityIndicator
                         size="large"
                         color="#007AFF"
-                        style={{ marginVertical: 10 }}
+                        style={{ marginVertical: 10, flex: 1 }}
                     />
                 )}
                 {error && <Text variant="bodyMedium" style={{ color: theme.colors.error }}>{error}</Text>}
             </Portal>
-            <Appbar.Header style={{ backgroundColor: theme.colors.background }}>
+            <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="设备路径配置" />
             </Appbar.Header>
@@ -87,7 +87,7 @@ const DevicePathScreen = ({ navigation }: any) => {
                                         />
                                         <View style={{ marginLeft: 8, flex: 1 }}>
                                             <Text variant="bodyLarge" style={{ color: isSelected ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}>
-                                                {item.name}
+                                                {item.path}
                                             </Text>
                                             <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                                                 {item.path}

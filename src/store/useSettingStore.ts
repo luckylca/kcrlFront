@@ -1,6 +1,8 @@
 // src/store/useSettingStore.ts
 // 这里面放的是设置相关的信息，包含UI的设置和CPPAPIConfig的设置
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CPPAPIConfig } from '../api/CPPAPIConfig';
 import RNFS from 'react-native-fs';
 
@@ -58,45 +60,60 @@ interface SettingState {
 
 }
 
-export const useSettingStore = create<SettingState>((set) => ({
-    logRecord: false,
-    setLogRecord: (value: boolean) => set(() => ({ logRecord: value })),
-    // 主题设置,不放到设置API里面
-    isDarkMode: false,
-    setDarkMode: (value: boolean) => set(() => ({ isDarkMode: value })),
-    themeColor: '#6750A4', // Default Purple
-    setThemeColor: (value: string) => set(() => ({ themeColor: value })),
-    backgroundImage: null,
-    setBackgroundImage: (value: string | null) => set(() => ({ backgroundImage: value })),
-    backgroundOpacity: 0.5,
-    setBackgroundOpacity: (value: number) => set(() => ({ backgroundOpacity: value })),
+export const useSettingStore = create<SettingState>()(
+    persist(
+        (set) => ({
+            logRecord: false,
+            setLogRecord: (value: boolean) => set(() => ({ logRecord: value })),
+            // 主题设置,不放到设置API里面
+            isDarkMode: false,
+            setDarkMode: (value: boolean) => set(() => ({ isDarkMode: value })),
+            themeColor: '#6750A4', // Default Purple
+            setThemeColor: (value: string) => set(() => ({ themeColor: value })),
+            backgroundImage: null,
+            setBackgroundImage: (value: string | null) => set(() => ({ backgroundImage: value })),
+            backgroundOpacity: 0.5,
+            setBackgroundOpacity: (value: number) => set(() => ({ backgroundOpacity: value })),
 
-    // Time Config Defaults
-    clickThreshold: 200,
-    setClickThreshold: (value: number) => set(() => ({ clickThreshold: value })),
-    shortPressThreshold: 500,
-    setShortPressThreshold: (value: number) => set(() => ({ shortPressThreshold: value })),
-    longPressThreshold: 1000,
-    setLongPressThreshold: (value: number) => set(() => ({ longPressThreshold: value })),
-    doubleClickInterval: 300,
-    setDoubleClickInterval: (value: number) => set(() => ({ doubleClickInterval: value })),
+            // Time Config Defaults
+            clickThreshold: 200,
+            setClickThreshold: (value: number) => set(() => ({ clickThreshold: value })),
+            shortPressThreshold: 500,
+            setShortPressThreshold: (value: number) => set(() => ({ shortPressThreshold: value })),
+            longPressThreshold: 1000,
+            setLongPressThreshold: (value: number) => set(() => ({ longPressThreshold: value })),
+            doubleClickInterval: 300,
+            setDoubleClickInterval: (value: number) => set(() => ({ doubleClickInterval: value })),
 
-    allDevices: [],
-    setAllDevices: (value: Device[]) => set(() => ({ allDevices: value })),
+            allDevices: [],
+            setAllDevices: (value: Device[]) => set(() => ({ allDevices: value })),
 
-    //CPPAPIConfig剩下的东西
-    device: [],
-    setDevice: (value: string[]) => set(() => ({ device: value })),
-    name: 'sample_name',
-    setName: (value: string) => set(() => ({ name: value })),
-    enable_log: false,
-    setEnableLog: (value: boolean) => set(() => ({ enable_log: value })),
-    cpu_affinity: [0],
-    setCpuAffinity: (value: number[]) => set(() => ({ cpu_affinity: value })),
-    keyevent: {},
-    setKeyevent: (value: Record<string, KeyEvent>) => set(() => ({ keyevent: value })),
-
-}));
+            //CPPAPIConfig剩下的东西
+            device: [],
+            setDevice: (value: string[]) => set(() => ({ device: value })),
+            name: 'sample_name',
+            setName: (value: string) => set(() => ({ name: value })),
+            enable_log: false,
+            setEnableLog: (value: boolean) => set(() => ({ enable_log: value })),
+            cpu_affinity: [0],
+            setCpuAffinity: (value: number[]) => set(() => ({ cpu_affinity: value })),
+            keyevent: {},
+            setKeyevent: (value: Record<string, KeyEvent>) => set(() => ({ keyevent: value })),
+        }),
+        {
+            name: 'setting-storage',
+            storage: createJSONStorage(() => AsyncStorage),
+            partialize: (state) => ({
+                isDarkMode: state.isDarkMode,
+                themeColor: state.themeColor,
+                backgroundImage: state.backgroundImage,
+                backgroundOpacity: state.backgroundOpacity,
+                allDevices: state.allDevices,
+                keyevent: state.keyevent,
+            }),
+        }
+    )
+);
 
 // 1. 实现防抖函数
 function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {

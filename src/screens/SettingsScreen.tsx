@@ -115,7 +115,8 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
                 style={[
                     styles.card,
                     {
-                        backgroundColor: theme.colors.elevation.level1,
+                        backgroundColor: theme.colors.surface,
+                        opacity: 0.9,
                         borderRadius: 24, // Material You Large Radius
                     }
                 ]}
@@ -177,32 +178,7 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
 const SettingsScreen = ({ navigation }: any) => {
     const insets = useSafeAreaInsets();
 
-    // Custom Material You Theme for this screen (Purple Seed #6750A4)
-    const localTheme = {
-        ...useTheme(),
-        colors: {
-            ...useTheme().colors,
-            primary: '#6750A4',
-            onPrimary: '#FFFFFF',
-            primaryContainer: '#EADDFF',
-            onPrimaryContainer: '#21005D',
-            secondary: '#625B71',
-            secondaryContainer: '#E8DEF8',
-            onSecondaryContainer: '#1D192B',
-            surface: '#FFFBFE',
-            onSurface: '#1C1B1F',
-            surfaceVariant: '#E7E0EC',
-            onSurfaceVariant: '#49454F',
-            elevation: {
-                level0: 'transparent',
-                level1: '#F3EDF7', // Surface Container
-                level2: '#ECE6F0',
-                level3: '#E6E1E9',
-                level4: '#E0DEE5',
-                level5: '#DCDAE3',
-            }
-        },
-    };
+    const theme = useTheme();
 
     // State for Toggles
     const [isLogEnabled, setIsLogEnabled] = useState(false);
@@ -272,10 +248,10 @@ const SettingsScreen = ({ navigation }: any) => {
     ];
 
     return (
-        <View style={[styles.container, { backgroundColor: localTheme.colors.surface }]}>
+        <View style={[styles.container, { backgroundColor: 'transparent' }]}>
             {/* Header / AppBar */}
             <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-                <Text variant="displaySmall" style={[styles.headerTitle, { color: localTheme.colors.onSurface }]}>
+                <Text variant="displaySmall" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
                     设置
                 </Text>
             </View>
@@ -290,7 +266,7 @@ const SettingsScreen = ({ navigation }: any) => {
                         key={item.id}
                         item={item}
                         index={index}
-                        theme={localTheme}
+                        theme={theme}
                         navigation={navigation}
                     />
                 ))}
