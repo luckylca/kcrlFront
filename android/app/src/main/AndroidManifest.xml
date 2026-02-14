@@ -24,4 +24,7 @@
         </intent-filter>
       </activity>
     </application>
+    <queries>
+        <package android:name="com.idlike.kctrl.service" />
+    </queries>
 </manifest>

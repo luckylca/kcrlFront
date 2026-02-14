@@ -246,9 +246,8 @@ export class CPPAPISocket {
   }
   /** 关闭服务 */
   private async _shutdown(): Promise<boolean> {
-    if (!passwordFetched) return false;
     writeData('@CPPAPI_SOCKETPWD', '', null);
-    const ret = await this.sendRawCommand(`${cachedPassword} shutdown`);
+    const ret = await this.sendRawCommand(`shutdown`);
     return ret.toString().trim() === 'OK: shutdown';
   }
 }

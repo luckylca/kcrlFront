@@ -5,6 +5,8 @@ import { Text, useTheme, Surface, Button, IconButton, TouchableRipple } from 're
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CPPAPISocket } from "../api/CPPAPISocket.ts";
+import { Linking } from 'react-native';
+
 
 const { width } = Dimensions.get('window');
 
@@ -100,14 +102,11 @@ const HomeScreen = ({ navigation }: any) => {
             socket = new CPPAPISocket()
             if (!await socket.init()) return;
             setIsServiceRunning(await socket.isWorking());
-            return;
         }
         if (await socket.isWorking()) {
-            //尝试关闭服务
             await socket.shutdown();
         } else {
-            // 尝试引导用户启动服务 + 已获取授权的话直接调用服务app的一键启动（除了shell启动外都可以使用）
-            // TODO: 我做好app端的一键启动后在这块启动activity。
+          Linking.sendIntent('com.idlike.kctrl.service.AUTOSTART');
         }
 
         setIsServiceRunning(await socket.isWorking());
@@ -130,7 +129,7 @@ const HomeScreen = ({ navigation }: any) => {
         statusGet();
 
         // 每 10 秒执行一次
-        const intervalId = setInterval(statusGet, 10000);
+        const intervalId = setInterval(statusGet, 3000);
 
         return () => {
             mounted = false;
