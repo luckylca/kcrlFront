@@ -27,16 +27,21 @@ const DevicePathScreen = ({ navigation }: any) => {
         setLoading(true);
         setError(null);
         setDevices([]);
-        if (allDevices.length > 0) {
-            setLoading(false);
-            setDevices(allDevices);
-            return;
-        }
+        // if (allDevices.length > 0) {
+        //     setLoading(false);
+        //     setDevices(allDevices);
+        //     return;
+        // }
+        console.log("start to load devices");
         try {
             // 创建 CPPAPISocket 实例
             const socket = new CPPAPISocket();
             //需要初始化
-            socket.init();
+            const r =  await socket.init();
+            if(!r) {
+                setError('无法连接到kctrl服务');
+                return;
+            }
             // 调用 DevicesGetter 获取设备 JSON
             const list = await DevicesGetter(socket);
             setDevices(list);
