@@ -56,6 +56,9 @@ interface SettingState {
     setCpuAffinity: (value: number[]) => void;
     keyevent: Record<string, KeyEvent>;
     setKeyevent: (value: Record<string, KeyEvent>) => void;
+    // 锁定方式
+    lockMethod: 'path' | 'name';
+    setLockMethod: (value: 'path' | 'name') => void;
 
 
 }
@@ -99,6 +102,8 @@ export const useSettingStore = create<SettingState>()(
             setCpuAffinity: (value: number[]) => set(() => ({ cpu_affinity: value })),
             keyevent: {},
             setKeyevent: (value: Record<string, KeyEvent>) => set(() => ({ keyevent: value })),
+            lockMethod: 'path',
+            setLockMethod: (value: 'path' | 'name') => set(() => ({ lockMethod: value })),
         }),
         {
             name: 'setting-storage',
@@ -118,6 +123,7 @@ export const useSettingStore = create<SettingState>()(
                 doubleClickInterval: state.doubleClickInterval,
                 enable_log: state.enable_log,
                 cpu_affinity: state.cpu_affinity,
+                lockMethod: state.lockMethod,
             }),
         }
     )

@@ -201,7 +201,6 @@ const ScriptConfigScreen = () => {
 
         saveScript(saveName, localScripts);
         setCurrentScriptName(saveName);
-        await exportScript();
         setIsSaveDialogVisible(false);
     };
 

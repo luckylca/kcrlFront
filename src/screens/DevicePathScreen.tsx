@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, InteractionManager } from 'react-native';
-import { Appbar, Text, useTheme, IconButton, Surface, Divider, Portal, ActivityIndicator } from 'react-native-paper';
+import { Appbar, Text, useTheme, IconButton, Surface, Divider, Portal, ActivityIndicator, Menu } from 'react-native-paper';
 import { useSettingStore } from '../store/useSettingStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DevicesGetter, InputDevice } from '../api/devicesGetter';
@@ -11,34 +11,34 @@ import { CPPAPISocket } from "../api/CPPAPISocket.ts";
 const DevicePathScreen = ({ navigation }: any) => {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
-    const { device, setDevice, allDevices, setAllDevices } = useSettingStore();
+    const { device, setDevice, allDevices, setAllDevices, lockMethod, setLockMethod } = useSettingStore();
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [devices, setDevices] = React.useState<InputDevice[]>([]);
+    const [visible, setVisible] = React.useState(false);
 
-    const toggleDevice = (path: string) => {
-        if (device.includes(path)) {
-            setDevice(device.filter(d => d !== path));
+    const openMenu = () => setVisible(true);
+    const closeMenu = () => setVisible(false);
+
+    const toggleDevice = (item: InputDevice) => {
+        const value = lockMethod === 'name' ? item.name : item.path;
+        if (device.includes(value)) {
+            setDevice(device.filter(d => d !== value));
         } else {
-            setDevice([...device, path]);
+            setDevice([...device, value]);
         }
     };
     const fetchDevices = async () => {
         setLoading(true);
         setError(null);
         setDevices([]);
-        // if (allDevices.length > 0) {
-        //     setLoading(false);
-        //     setDevices(allDevices);
-        //     return;
-        // }
         console.log("start to load devices");
         try {
             // 创建 CPPAPISocket 实例
             const socket = new CPPAPISocket();
             //需要初始化
-            const r =  await socket.init();
-            if(!r) {
+            const r = await socket.init();
+            if (!r) {
                 setError('无法连接到kctrl服务');
                 return;
             }
@@ -53,13 +53,9 @@ const DevicePathScreen = ({ navigation }: any) => {
         }
     };
     React.useEffect(() => {
-        // 2. 使用 runAfterInteractions 包裹
-        // 这意味着：等导航动画完全结束了，再执行里面的代码
         const task = InteractionManager.runAfterInteractions(() => {
             fetchDevices();
         });
-
-        // 清理函数：如果用户在加载前就退出了，取消任务
         return () => task.cancel();
     }, []);
 
@@ -78,32 +74,54 @@ const DevicePathScreen = ({ navigation }: any) => {
             <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="设备路径配置" />
+                <Menu
+                    visible={visible}
+                    onDismiss={closeMenu}
+                    anchor={<Appbar.Action icon="cog" onPress={openMenu} />}>
+                    <Menu.Item
+                        onPress={() => {
+                            setLockMethod('path');
+                            closeMenu();
+                        }}
+                        title="通过路径锁定"
+                        leadingIcon={lockMethod === 'path' ? 'check' : () => <View style={{ width: 24, backgroundColor: 'transparent' }} />}
+                    />
+                    <Menu.Item
+                        onPress={() => {
+                            setLockMethod('name');
+                            closeMenu();
+                        }}
+                        title="通过名字锁定"
+                        leadingIcon={lockMethod === 'name' ? 'check' : () => <View style={{ width: 24, backgroundColor: 'transparent' }} />}
+                    />
+                </Menu>
             </Appbar.Header>
 
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 20 }}>
                 <Text variant="bodyMedium" style={{ color: theme.colors.secondary, marginBottom: 16 }}>
-                    请选择需要监听的输入设备 (多选):
+                    当前锁定方式: {lockMethod === 'name' ? '设备名称' : '设备路径'} (点击右上角切换)
                 </Text>
 
                 <Surface style={[styles.listContainer, { backgroundColor: theme.colors.surface }]} elevation={1}>
                     {devices.map((item, index) => {
-                        const isSelected = device.includes(item.path);
+                        const value = lockMethod === 'name' ? item.name : item.path;
+                        const isSelected = device.includes(value);
                         return (
                             <View key={item.path}>
                                 <TouchableOpacity
                                     style={styles.itemRow}
-                                    onPress={() => toggleDevice(item.path)}
+                                    onPress={() => toggleDevice(item)}
                                 >
                                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                                         <IconButton
                                             icon={isSelected ? "checkbox-marked-circle" : "checkbox-blank-circle-outline"}
                                             iconColor={isSelected ? theme.colors.primary : theme.colors.outline}
                                             size={24}
-                                            onPress={() => toggleDevice(item.path)}
+                                            onPress={() => toggleDevice(item)}
                                         />
                                         <View style={{ marginLeft: 8, flex: 1 }}>
                                             <Text variant="bodyLarge" style={{ color: isSelected ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}>
-                                                {item.path}
+                                                {item.name}
                                             </Text>
                                             <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
                                                 {item.path}

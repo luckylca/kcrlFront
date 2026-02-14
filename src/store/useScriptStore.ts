@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFS from 'react-native-fs';
+import { generateShellScript } from '../utils/scriptGenerator';
 
 export type ScriptType = 'logic' | 'function' | 'music' | 'system' | 'other';
 
@@ -96,3 +98,62 @@ export const useScriptStore = create<ScriptState>()(
         }
     )
 );
+
+const sanitizeFileName = (name: string): string => {
+    return name.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+};
+
+// 1. 实现防抖函数
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return (...args: Parameters<T>) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
+
+
+const saveToFile = async (state: ScriptState) => {
+    const BASE_DIR = RNFS.ExternalDirectoryPath;       // /sdcard/Android/data/包名/files
+    const SCRIPTS_DIR = `${BASE_DIR}/scripts`;         // 专门放 .sh 的子目录
+
+    try {
+        // A. 确保 scripts 目录存在
+        if (!(await RNFS.exists(SCRIPTS_DIR))) {
+            await RNFS.mkdir(SCRIPTS_DIR);
+        } else {
+            // (可选) 激进同步策略：先清空目录，防止你删了脚本但文件还留着
+            // 如果你只希望覆盖不希望删除，可以注释掉下面两行
+            await RNFS.unlink(SCRIPTS_DIR).catch(() => { });
+            await RNFS.mkdir(SCRIPTS_DIR);
+        }
+
+        // B. 遍历所有保存的脚本
+        const promises = state.savedScripts.map(async (script) => {
+            // 1. 生成文件名 (例如: "测试脚本.sh")
+            const safeName = sanitizeFileName(script.name);
+            const filePath = `${SCRIPTS_DIR}/${safeName}.sh`;
+
+            // 2. 使用你的工具生成内容
+            const shContent = generateShellScript(script.steps);
+
+            // 3. 写入文件
+            await RNFS.writeFile(filePath, shContent, 'utf8');
+            console.log(`📄 已生成: ${safeName}.sh`);
+        });
+
+        // 等待所有文件写入完成
+        await Promise.all(promises);
+        console.log(`✅ 全部 .sh 脚本同步完成，共 ${promises.length} 个`);
+
+    } catch (err) {
+        console.error('❌ .sh 导出失败:', err);
+    }
+};
+
+const debouncedSave = debounce(saveToFile, 1000);
+
+// 4. 监听 Store 变化
+useScriptStore.subscribe((state) => {
+    debouncedSave(state);
+});

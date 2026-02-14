@@ -4,7 +4,7 @@ import { View, StyleSheet, TouchableOpacity, Animated, Easing, Dimensions, Scrol
 import { Text, useTheme, Surface, Button, IconButton, TouchableRipple } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {CPPAPISocket} from "../api/CPPAPISocket.ts";
+import { CPPAPISocket } from "../api/CPPAPISocket.ts";
 
 const { width } = Dimensions.get('window');
 
@@ -72,7 +72,7 @@ const HomeScreen = ({ navigation }: any) => {
     const slideAnim = useRef(new Animated.Value(50)).current;
 
     // 第一次启动启动socket
-    if(socket === null){
+    if (socket === null) {
         socket = new CPPAPISocket()
         socket.init().then(null);
     }
@@ -81,31 +81,31 @@ const HomeScreen = ({ navigation }: any) => {
 
     useEffect(() => {
         Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.spring(slideAnim, {
-            toValue: 0,
-            damping: 20,
-            stiffness: 90,
-            useNativeDriver: true,
-          }),
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                damping: 20,
+                stiffness: 90,
+                useNativeDriver: true,
+            }),
         ]).start();
     }, [fadeAnim, slideAnim]);
 
     const statusCardPress = async () => {
-        if (socket === null){
+        if (socket === null) {
             socket = new CPPAPISocket()
-            if(!await socket.init()) return;
+            if (!await socket.init()) return;
             setIsServiceRunning(await socket.isWorking());
             return;
         }
         if (await socket.isWorking()) {
-          //尝试关闭服务
-          await socket.shutdown();
-        }else{
+            //尝试关闭服务
+            await socket.shutdown();
+        } else {
             // 尝试引导用户启动服务 + 已获取授权的话直接调用服务app的一键启动（除了shell启动外都可以使用）
             // TODO: 我做好app端的一键启动后在这块启动activity。
         }
@@ -114,28 +114,28 @@ const HomeScreen = ({ navigation }: any) => {
     };
 
     React.useEffect(() => {
-      let mounted = true;
+        let mounted = true;
 
-      const statusGet = async () => {
-        if (!mounted) return;
-        if (socket === null) return;
+        const statusGet = async () => {
+            if (!mounted) return;
+            if (socket === null) return;
 
-        const result = await socket.isWorking();
-        if (mounted) {
-          setIsServiceRunning(result);
-        }
-      };
+            const result = await socket.isWorking();
+            if (mounted) {
+                setIsServiceRunning(result);
+            }
+        };
 
-      // 立即执行一次
-      statusGet();
+        // 立即执行一次
+        statusGet();
 
-      // 每 10 秒执行一次
-      const intervalId = setInterval(statusGet, 10000);
+        // 每 10 秒执行一次
+        const intervalId = setInterval(statusGet, 10000);
 
-      return () => {
-        mounted = false;
-        clearInterval(intervalId);
-      };
+        return () => {
+            mounted = false;
+            clearInterval(intervalId);
+        };
     }, []);
 
 
