@@ -3,48 +3,35 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Animated, Keyboard } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
-const TabItem = ({ route, index, state, descriptors, navigation, theme }: any) => {
-    const { options } = descriptors[route.key];
-    const label =
-        options.tabBarLabel !== undefined
-            ? options.tabBarLabel
-            : options.title !== undefined
-                ? options.title
-                : route.name;
+// 1. 定义我们需要的路由结构
+export interface TabRoute {
+    key: string;
+    title: string;
+    icon: string;
+}
 
-    const isFocused = state.index === index;
+// 2. 定义组件接收的 Props
+interface CustomTabBarProps {
+    activeIndex: number;                  // 当前选中的索引
+    onIndexChange: (index: number) => void; // 切换时的回调
+    routes: TabRoute[];                   // 路由配置
+}
 
+const TabItem = ({ route, index, activeIndex, onIndexChange, theme }: any) => {
+    const isFocused = activeIndex === index;
+
+    // 3. 点击逻辑简化：直接调用父组件传来的回调
     const onPress = () => {
-        const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-        });
-
-        if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
+        if (!isFocused) {
+            onIndexChange(index);
         }
     };
 
-    const onLongPress = () => {
-        navigation.emit({
-            type: 'tabLongPress',
-            target: route.key,
-        });
-    };
-
-    // Icon logic
-    const iconName =
-        route.name === 'Home' ? 'home' :
-            route.name === 'Community' ? 'account-group' :
-                route.name === 'Setting' ? 'cog' : 'circle';
-
-    // Tab Item Animation
+    // 动画逻辑（完全保留你的原代码）
     const scale = useRef(new Animated.Value(0)).current;
     const opacity = useRef(new Animated.Value(0)).current;
 
@@ -64,26 +51,22 @@ const TabItem = ({ route, index, state, descriptors, navigation, theme }: any) =
 
     return (
         <TouchableOpacity
-            key={route.key}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            testID={options.tabBarTestID}
             onPress={onPress}
-            onLongPress={onLongPress}
             style={styles.tabItem}
             activeOpacity={0.8}
         >
             <Animated.View style={{ transform: [{ scale }], opacity, alignItems: 'center' }}>
                 <MaterialCommunityIcons
-                    name={iconName}
+                    name={route.icon}
                     size={24}
                     color={isFocused ? theme.colors.primary : theme.colors.onSurfaceVariant}
                 />
                 {isFocused && (
                     <Animated.View style={{ opacity }}>
                         <Text variant="labelSmall" style={{ color: theme.colors.primary, fontWeight: 'bold', marginTop: 2 }}>
-                            {label as string}
+                            {route.title}
                         </Text>
                     </Animated.View>
                 )}
@@ -92,68 +75,58 @@ const TabItem = ({ route, index, state, descriptors, navigation, theme }: any) =
     );
 };
 
-const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
+const CustomTabBar = ({ activeIndex, onIndexChange, routes }: CustomTabBarProps) => {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-    // Animation for active tab indicator
     const translateValue = useRef(new Animated.Value(0)).current;
+    const tabWidth = (width - 40) / routes.length;
 
-    // Calculate tab width based on number of tabs
-    const tabWidth = (width - 40) / state.routes.length; // 40 is total horizontal margin
-
+    // 键盘监听（保留原逻辑）
     useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener(
-            'keyboardDidShow',
-            () => setKeyboardVisible(true)
-        );
-        const keyboardDidHideListener = Keyboard.addListener(
-            'keyboardDidHide',
-            () => setKeyboardVisible(false)
-        );
-
+        const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
         return () => {
-            keyboardDidHideListener.remove();
-            keyboardDidShowListener.remove();
+            showSub.remove();
+            hideSub.remove();
         };
     }, []);
 
+    // 4. 动画监听：监听 activeIndex 而不是 state.index
     useEffect(() => {
         Animated.spring(translateValue, {
-            toValue: state.index * tabWidth,
+            toValue: activeIndex * tabWidth,
             useNativeDriver: true,
             damping: 15,
             mass: 1,
             stiffness: 100,
         }).start();
-    }, [state.index, tabWidth, translateValue]);
+    }, [activeIndex, tabWidth, translateValue]);
 
-    if (keyboardVisible) return null; // Hide tab bar when keyboard is open
+    if (keyboardVisible) return null;
 
     return (
         <View style={[styles.container, { bottom: 20 + insets.bottom }]}>
             <View style={[styles.tabBar, { backgroundColor: theme.colors.elevation.level3, shadowColor: theme.colors.shadow }]}>
-                {/* Animated Indicator */}
                 <Animated.View
                     style={[
                         styles.activeTab,
                         {
-                            width: tabWidth - 10, // Slightly smaller than tab width
+                            width: tabWidth - 10,
                             transform: [{ translateX: translateValue }],
                             backgroundColor: theme.colors.primaryContainer,
                         },
                     ]}
                 />
 
-                {state.routes.map((route, index) => (
+                {routes.map((route, index) => (
                     <TabItem
                         key={route.key}
                         route={route}
                         index={index}
-                        state={state}
-                        descriptors={descriptors}
-                        navigation={navigation}
+                        activeIndex={activeIndex}
+                        onIndexChange={onIndexChange}
                         theme={theme}
                     />
                 ))}
@@ -165,7 +138,6 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        // bottom is handled inline
         left: 20,
         right: 20,
         alignItems: 'center',
@@ -175,14 +147,11 @@ const styles = StyleSheet.create({
         height: 60,
         borderRadius: 30,
         elevation: 5,
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 10,
         alignItems: 'center',
-        paddingHorizontal: 5, // Inner padding for the indicator
+        paddingHorizontal: 5,
         width: '100%',
     },
     tabItem: {
@@ -196,7 +165,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         height: 50,
         borderRadius: 25,
-        left: 5, // Match paddingHorizontal
+        left: 5,
     },
 });
 

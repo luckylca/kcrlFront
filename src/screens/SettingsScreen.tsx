@@ -133,7 +133,7 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
                     <View style={styles.cardContent}>
                         {/* Icon Box */}
                         <View style={[styles.iconBox, { backgroundColor: theme.colors.secondaryContainer }]}>
-                            <MaterialCommunityIcons name={item.icon} size={24} color={theme.colors.onSecondaryContainer} />
+                            <MaterialCommunityIcons name={item.icon} size={24} color={theme.colors.primary} />
                         </View>
 
                         {/* Text Content */}
