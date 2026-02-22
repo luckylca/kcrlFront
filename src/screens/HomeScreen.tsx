@@ -6,7 +6,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CPPAPISocket } from "../api/CPPAPISocket.ts";
 import { Linking } from 'react-native';
-
+import SendIntentAndroid from 'react-native-send-intent';
 
 const { width } = Dimensions.get('window');
 
@@ -97,16 +97,34 @@ const HomeScreen = ({ navigation }: any) => {
         ]).start();
     }, [fadeAnim, slideAnim]);
 
+    const openTargetApp = () => {
+        SendIntentAndroid.isAppInstalled('com.idlike.kctrl.service').then((isInstalled) => {
+            if (isInstalled) {
+                SendIntentAndroid.openApp('com.idlike.kctrl.service').then((wasOpened) => {
+                    console.log("App 是否打开:", wasOpened);
+                });
+            } else {
+                console.log("应用未安装");
+            }
+        });
+    };
+
     const statusCardPress = async () => {
         if (socket === null) {
             socket = new CPPAPISocket()
             if (!await socket.init()) return;
             setIsServiceRunning(await socket.isWorking());
         }
+        const pkg = 'com.idlike.kctrl.service';
+        const cls = 'com.idlike.kctrl.service.MainActivity';
+
+        // 构建 Intent 字符串
+        const intentUri = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=${pkg}/${cls};end`;
+
         if (await socket.isWorking()) {
             await socket.shutdown();
         } else {
-          Linking.sendIntent('com.idlike.kctrl.service.AUTOSTART');
+            openTargetApp();
         }
 
         setIsServiceRunning(await socket.isWorking());

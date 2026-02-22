@@ -40,7 +40,7 @@ const FilterChip = ({
                     style={[
                         styles.filterChip,
                         {
-                            backgroundColor: isSelected ? theme.colors.primaryContainer : theme.colors.surface,
+                            backgroundColor: isSelected ? theme.colors.primary : theme.colors.surface,
                             borderColor: isSelected ? 'transparent' : theme.colors.outline,
                             borderWidth: isSelected ? 0 : 1,
                         }
@@ -62,7 +62,7 @@ const FilterChip = ({
 };
 
 // Separated PostItem without entrance animation
-const PostItem = ({ item, theme }: { item: any, theme: any }) => {
+const PostItem = ({ item, theme, onPress }: { item: any, theme: any, onPress?: () => void }) => {
     const scale = useRef(new Animated.Value(1)).current;
     const onPressIn = () => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start();
     const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
@@ -70,7 +70,7 @@ const PostItem = ({ item, theme }: { item: any, theme: any }) => {
     return (
         <Animated.View style={{ transform: [{ scale }] }}>
             <TouchableRipple
-                onPress={() => { }}
+                onPress={onPress}
                 onPressIn={onPressIn}
                 onPressOut={onPressOut}
                 style={[styles.postCard, { backgroundColor: theme.colors.surface }]}
@@ -119,7 +119,7 @@ const CommunityScreen = ({ navigation }: any) => {
     const insets = useSafeAreaInsets();
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-    const [selectedFilter, setSelectedFilter] = useState('All');
+    const [selectedFilter, setSelectedFilter] = useState('全部');
 
     // 1. Search Bar Animation
     const searchAnim = useRef(new Animated.Value(0)).current;
@@ -263,7 +263,7 @@ const CommunityScreen = ({ navigation }: any) => {
 
             <FlatList
                 data={posts}
-                renderItem={({ item, index }) => <PostItem item={item} theme={theme} />}
+                renderItem={({ item }) => <PostItem item={item} theme={theme} onPress={() => navigation.navigate('PostDetail', { post: item })} />}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
@@ -282,7 +282,7 @@ const CommunityScreen = ({ navigation }: any) => {
                     icon="plus"
                     style={[styles.fab, { backgroundColor: theme.colors.primary }]}
                     color={theme.colors.onPrimary}
-                    onPress={() => console.log('Create Post')}
+                    onPress={() => navigation.navigate('CreatePost')}
                     customSize={64}
                 />
             </Animated.View>
@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginTop: 12,
     },
     authorContainer: {
         flexDirection: 'row',

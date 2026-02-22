@@ -11,6 +11,8 @@ import DevicePathScreen from '../screens/DevicePathScreen';
 import TimeConfigScreen from '../screens/TimeConfigScreen';
 import ThemeSettingsScreen from '../screens/ThemeSettingsScreen';
 import ScriptConfigScreen from '../screens/ScriptConfigScreen';
+import CreatePostScreen from '../screens/CreatePostScreen';
+import PostDetailScreen from '../screens/PostDetailScreen';
 
 
 // 1. 定义路由参数列表
@@ -23,6 +25,8 @@ export type RootStackParamList = {
     ThemeSettings: undefined;
     ScriptConfig: undefined;
     Setting: undefined;
+    CreatePost: undefined;
+    PostDetail: { post: any };
 };
 
 // 2. 定义 Tab 参数列表
@@ -64,6 +68,14 @@ const RootNavigator = () => {
             <Stack.Screen
                 name="ScriptConfig"
                 component={ScriptConfigScreen}
+            />
+            <Stack.Screen
+                name="CreatePost"
+                component={CreatePostScreen}
+            />
+            <Stack.Screen
+                name="PostDetail"
+                component={PostDetailScreen}
             />
         </Stack.Navigator>
     );

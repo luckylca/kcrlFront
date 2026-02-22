@@ -17,9 +17,9 @@ const MainScreen = ({ navigation, route }: any) => {
 
     // 1. 配置你的 Tab 列表
     const routes: TabRoute[] = useMemo(() => [
-        { key: 'home', title: 'Home', icon: 'home' },
-        { key: 'community', title: 'Community', icon: 'account-group' },
-        { key: 'setting', title: 'Setting', icon: 'cog' },
+        { key: 'home', title: '状态', icon: 'home' },
+        { key: 'community', title: '社区', icon: 'account-group' },
+        { key: 'setting', title: '设置', icon: 'cog' },
     ], []);
 
     // 2. 处理 Tab 点击（联动 PagerView）
@@ -38,7 +38,7 @@ const MainScreen = ({ navigation, route }: any) => {
             {/* 使用 PagerView 实现左右滑动 
                style 设置为透明，以便 App.tsx 的背景图能透出来
             */}
-            <PagerView
+            < PagerView
                 ref={pagerRef}
                 style={styles.pagerView}
                 initialPage={0}
@@ -46,31 +46,31 @@ const MainScreen = ({ navigation, route }: any) => {
                 overdrag={true} // Android 上的回弹效果
             >
                 {/* 第一页：Home */}
-                <View key="home" style={styles.pageWrapper}>
+                < View key="home" style={styles.pageWrapper} >
                     {/* <HomeScreen /> */}
-                    <HomeScreen navigation={navigation} route={route} name="首页内容" />
-                </View>
+                    < HomeScreen navigation={navigation} route={route} name="首页内容" />
+                </View >
 
                 {/* 第二页：Community */}
-                <View key="community" style={styles.pageWrapper}>
+                < View key="community" style={styles.pageWrapper} >
                     {/* <CommunityScreen /> */}
-                    <CommunityScreen navigation={navigation} route={route} name="社区内容" />
-                </View>
+                    < CommunityScreen navigation={navigation} route={route} name="社区内容" />
+                </View >
 
                 {/* 第三页：Setting */}
-                <View key="setting" style={styles.pageWrapper}>
+                < View key="setting" style={styles.pageWrapper} >
                     {/* <SettingScreen /> */}
-                    <SettingsScreen navigation={navigation} route={route} name="设置内容" />
-                </View>
-            </PagerView>
+                    < SettingsScreen navigation={navigation} route={route} name="设置内容" />
+                </View >
+            </PagerView >
 
             {/* 自定义 TabBar 悬浮在底部 */}
-            <CustomTabBar
+            < CustomTabBar
                 activeIndex={activeIndex}
                 onIndexChange={handleTabPress}
                 routes={routes}
             />
-        </View>
+        </View >
     );
 };
 

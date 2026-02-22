@@ -4,19 +4,19 @@ import { TestCPPAPIDeviceGetter } from './TestCPPAPIDeviceGetter.tsx';
 import { TestCPPAPIDeviceLesion } from './TestCPPAPIDeviceLesion.tsx';
 
 var tests = {
-  socket:"CPPSOCKET",
-    devicelist:"CPPAPIDeviceGetter",
-    devicelesion:"CPPAPIDeviceLesion",
-  nop:"NO CREATE TEST"
+  socket: "CPPSOCKET",
+  devicelist: "CPPAPIDeviceGetter",
+  devicelesion: "CPPAPIDeviceLesion",
+  nop: "NO CREATE TEST"
 }
 
 
 var test_type = tests['devicelesion'];
-export var testable = true;
+export var testable = false;
 
 
-export default function Utest(){
-  if(test_type == "CPPSOCKET"){
+export default function Utest() {
+  if (test_type == "CPPSOCKET") {
     return <TestCPPAPI_Socket_App />
   } else if (test_type == 'CPPAPIDeviceGetter') {
     return <TestCPPAPIDeviceGetter />;
