@@ -6,7 +6,10 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CPPAPISocket } from "../api/CPPAPISocket.ts";
 import { Linking } from 'react-native';
-import SendIntentAndroid from 'react-native-send-intent';
+import SendIntentAndroid from "react-native-send-intent";
+import { NativeModules } from 'react-native';
+const { IntentLauncher } = NativeModules;
+
 
 const { width } = Dimensions.get('window');
 
@@ -82,49 +85,38 @@ const HomeScreen = ({ navigation }: any) => {
 
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 800,
-                useNativeDriver: true,
-            }),
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                damping: 20,
-                stiffness: 90,
-                useNativeDriver: true,
-            }),
-        ]).start();
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          damping: 20,
+          stiffness: 90,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }, [fadeAnim, slideAnim]);
-
-    const openTargetApp = () => {
-        SendIntentAndroid.isAppInstalled('com.idlike.kctrl.service').then((isInstalled) => {
-            if (isInstalled) {
-                SendIntentAndroid.openApp('com.idlike.kctrl.service').then((wasOpened) => {
-                    console.log("App 是否打开:", wasOpened);
-                });
-            } else {
-                console.log("应用未安装");
-            }
-        });
+    const openAutoStartActivity = async () => {
+      try {
+        const result = await IntentLauncher.openAutoStartActivity();
+        console.log('Activity 是否打开:', result);
+      } catch (err) {
+        console.error('打开 Activity 失败:', err);
+      }
     };
-
     const statusCardPress = async () => {
         if (socket === null) {
             socket = new CPPAPISocket()
             if (!await socket.init()) return;
             setIsServiceRunning(await socket.isWorking());
         }
-        const pkg = 'com.idlike.kctrl.service';
-        const cls = 'com.idlike.kctrl.service.MainActivity';
-
-        // 构建 Intent 字符串
-        const intentUri = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=${pkg}/${cls};end`;
-
         if (await socket.isWorking()) {
             await socket.shutdown();
         } else {
-            openTargetApp();
+            await openAutoStartActivity();
         }
 
         setIsServiceRunning(await socket.isWorking());
