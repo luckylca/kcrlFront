@@ -16,6 +16,7 @@
 
 import TcpSocket from 'react-native-tcp-socket';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 /** 常量和全局变量 */
 const HOST = '127.0.0.1';
 const PORT = 50501;
@@ -249,5 +250,47 @@ export class CPPAPISocket {
     writeData('@CPPAPI_SOCKETPWD', '', null);
     const ret = await this.sendRawCommand(`shutdown`);
     return ret.toString().trim() === 'OK: shutdown';
+  }
+
+  async _EXECRAWCOMMAND(cmd: string): Promise<string> {
+    const r = await this.sendRawCommand(`12345678 ${cmd}`);
+    console.log(cmd,r);
+    return r;
+  }
+}
+
+
+export class KeyInputMonitor{
+  private s: CPPAPISocket | null;
+  private dp: string | null;
+  constructor() {
+    this.s = null;
+    this.dp = null;
+  }
+
+  async start(socket: CPPAPISocket,device_path: string): Promise<boolean> {
+    this.s=socket;
+    this.dp = device_path;
+    if (!(await this.s.isInitialized())) return false;
+    const r = JSON.parse(await this.s._EXECRAWCOMMAND(`lison ${this.dp}`));
+    return r.state === 0;
+  }
+  async stop(): Promise<boolean> {
+    if(this.s===null&&this.dp===null) return false;
+    // @ts-ignore
+    if (!await this.s.isInitialized()) return false;
+    // @ts-ignore 因为上面做过检查s是否传入了
+    const r = JSON.parse(await this.s._EXECRAWCOMMAND('lison_close'));
+    return r.state === -1;
+  }
+  async get(){
+    if (this.s === null && this.dp === null) return false;
+    // @ts-ignore
+    if (!(await this.s.isInitialized())) return false;
+    // @ts-ignore 因为上面做过检查s是否传入了
+    return JSON.parse(await this.s._EXECRAWCOMMAND('lison_data'));
+    //json格式： "{\"state\":" + std::to_string(g_scan_state) +
+    //                               ",\"keycode\":\"" + g_last_key +
+    //                               "\",\"device\":\"" + g_current_device + "\"}\n"
   }
 }
