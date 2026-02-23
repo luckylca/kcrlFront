@@ -1,11 +1,28 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Animated, Dimensions, TouchableOpacity, FlatList, Easing } from 'react-native';
-import { Searchbar, Text, useTheme, FAB, Surface, IconButton, Avatar, Card, TouchableRipple } from 'react-native-paper';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { View, StyleSheet, Animated, Dimensions, TouchableOpacity, FlatList, Easing, RefreshControl, ActivityIndicator } from 'react-native';
+import { Searchbar, Text, useTheme, FAB, Surface, Avatar, Card, TouchableRipple } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import OLAPI, { Post } from '../api/OLAPI';
 
 const { width } = Dimensions.get('window');
+
+// ─── Helper: 时间格式化 ────────────────────────────────────────────
+const formatTime = (dateStr: string) => {
+    try {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = (now.getTime() - date.getTime()) / 1000;
+        if (diff < 60) { return '刚刚'; }
+        if (diff < 3600) { return `${Math.floor(diff / 60)} 分钟前`; }
+        if (diff < 86400) { return `${Math.floor(diff / 3600)} 小时前`; }
+        if (diff < 604800) { return `${Math.floor(diff / 86400)} 天前`; }
+        return date.toLocaleDateString();
+    } catch {
+        return dateStr;
+    }
+};
 
 // Component for Animated Filter Chip
 const FilterChip = ({
@@ -62,7 +79,7 @@ const FilterChip = ({
 };
 
 // Separated PostItem without entrance animation
-const PostItem = ({ item, theme, onPress }: { item: any, theme: any, onPress?: () => void }) => {
+const PostItem = ({ item, theme, onPress }: { item: Post, theme: any, onPress?: () => void }) => {
     const scale = useRef(new Animated.Value(1)).current;
     const onPressIn = () => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start();
     const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
@@ -81,33 +98,21 @@ const PostItem = ({ item, theme, onPress }: { item: any, theme: any, onPress?: (
                     <Card.Content>
                         <View style={styles.postHeader}>
                             <View style={styles.authorContainer}>
-                                <Avatar.Text size={28} label={item.author[0]} style={{ marginRight: 8, backgroundColor: theme.colors.secondaryContainer }} color={theme.colors.onSecondaryContainer} />
+                                <Avatar.Text size={28} label={(item.author || '?')[0]} style={{ marginRight: 8, backgroundColor: theme.colors.secondaryContainer }} color={theme.colors.onSecondaryContainer} />
                                 <View>
                                     <Text variant="labelMedium" style={{ color: theme.colors.onSurface }}>{item.author}</Text>
-                                    <Text variant="labelSmall" style={{ color: theme.colors.outline }}>2h ago</Text>
+                                    <Text variant="labelSmall" style={{ color: theme.colors.outline }}>{formatTime(item.created_at)}</Text>
                                 </View>
                             </View>
                             <Surface style={[styles.tagChip, { backgroundColor: theme.colors.tertiaryContainer }]} elevation={0}>
-                                <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{item.tag}</Text>
+                                <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{item.category}</Text>
                             </Surface>
                         </View>
                         <Text variant="titleMedium" style={{ fontWeight: 'bold', marginTop: 12, marginBottom: 4 }}>{item.title}</Text>
                         <Text variant="bodyMedium" numberOfLines={2} style={{ color: theme.colors.onSurfaceVariant }}>
-                            This is a snippet of the post content to give users a preview. Tap to read more about this interesting topic.
+                            {item.summary || item.content}
                         </Text>
                     </Card.Content>
-                    <Card.Actions style={{ paddingHorizontal: 8 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <IconButton icon="thumb-up-outline" size={20} iconColor={theme.colors.primary} />
-                            <Text variant="labelMedium" style={{ color: theme.colors.primary }}>12</Text>
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
-                            <IconButton icon="comment-outline" size={20} iconColor={theme.colors.secondary} />
-                            <Text variant="labelMedium" style={{ color: theme.colors.secondary }}>4</Text>
-                        </View>
-                        <View style={{ flex: 1 }} />
-                        <IconButton icon="share-variant-outline" size={20} />
-                    </Card.Actions>
                 </View>
             </TouchableRipple>
         </Animated.View>
@@ -121,31 +126,43 @@ const CommunityScreen = ({ navigation }: any) => {
     const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState('全部');
 
+    // ── API State ──
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
     // 1. Search Bar Animation
     const searchAnim = useRef(new Animated.Value(0)).current;
     const inputRef = useRef<any>(null);
 
     // 2. Filter Slide-in Animation
-    const filtersSlideAnim = useRef(new Animated.Value(20)).current; // Reduced distance
+    const filtersSlideAnim = useRef(new Animated.Value(20)).current;
     const filtersFadeAnim = useRef(new Animated.Value(0)).current;
 
     // 3. FAB Pop-in Animation
     const fabScaleAnim = useRef(new Animated.Value(0)).current;
 
-    const filters = ['全部', '模块', '主题', '工具', '脚本', '其他', '闲聊'];
+    const filters = ['全部', '模块', '主题', '工具', '脚本', '闲聊'];
 
-    // Placeholder Data
-    const posts = [
-        { id: '1', title: '如何使用动画？', author: 'DevUser1', tag: '帮助' },
-        { id: '2', title: '我的新应用展示！', author: 'CreativeMind', tag: '展示' },
-        { id: '3', title: 'React Native 的最佳实践', author: 'SeniorDev', tag: '讨论' },
-        { id: '4', title: '社区指南', author: 'Admin', tag: '公告' },
-        { id: '5', title: '错误：未定义的不是函数', author: 'Newbie', tag: '帮助' },
-        { id: '6', title: '寻找贡献者', author: 'OpenSourcer', tag: '协作' },
-        { id: '7', title: 'React Native vs Flutter?', author: 'Debater', tag: '讨论' },
-    ];
+    // ── Fetch Posts ──
+    const fetchPosts = useCallback(async (category?: string) => {
+        try {
+            const result = await OLAPI.getPosts({ category });
+            if (result.success && result.data) {
+                setPosts(result.data);
+            } else {
+                setPosts([]);
+            }
+        } catch (err) {
+            console.error('Fetch posts error:', err);
+            setPosts([]);
+        }
+    }, []);
 
     useEffect(() => {
+        setLoading(true);
+        fetchPosts(selectedFilter === '全部' ? undefined : selectedFilter).finally(() => setLoading(false));
+
         // Run Entrance Animations
         Animated.parallel([
             Animated.timing(filtersSlideAnim, {
@@ -168,6 +185,19 @@ const CommunityScreen = ({ navigation }: any) => {
             })
         ]).start();
     }, []);
+
+    // Re-fetch when filter changes
+    useEffect(() => {
+        setLoading(true);
+        fetchPosts(selectedFilter === '全部' ? undefined : selectedFilter).finally(() => setLoading(false));
+    }, [selectedFilter, fetchPosts]);
+
+    // Pull-to-refresh
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchPosts(selectedFilter === '全部' ? undefined : selectedFilter);
+        setRefreshing(false);
+    }, [selectedFilter, fetchPosts]);
 
 
     const toggleSearch = () => {
@@ -261,13 +291,33 @@ const CommunityScreen = ({ navigation }: any) => {
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderHeader()}
 
-            <FlatList
-                data={posts}
-                renderItem={({ item }) => <PostItem item={item} theme={theme} onPress={() => navigation.navigate('PostDetail', { post: item })} />}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-            />
+            {loading && posts.length === 0 ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                    <Text variant="bodyMedium" style={{ color: theme.colors.outline, marginTop: 12 }}>加载中...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={posts}
+                    renderItem={({ item }) => <PostItem item={item} theme={theme} onPress={() => navigation.navigate('PostDetail', { post: item })} />}
+                    keyExtractor={item => item.id}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text variant="bodyLarge" style={{ color: theme.colors.outline, textAlign: 'center' }}>暂时没有帖子{"\n"}快来发第一篇帖子吧 ✨</Text>
+                        </View>
+                    }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[theme.colors.primary]}
+                            tintColor={theme.colors.primary}
+                        />
+                    }
+                />
+            )}
 
             <Animated.View
                 style={[
@@ -381,7 +431,16 @@ const styles = StyleSheet.create({
     },
     fab: {
         borderRadius: 20,
-        elevation: 4, // Keep FAB shadow as it's a floating element
+        elevation: 4,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyContainer: {
+        paddingTop: 80,
+        alignItems: 'center',
     },
 });
 

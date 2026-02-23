@@ -13,6 +13,7 @@ import ThemeSettingsScreen from '../screens/ThemeSettingsScreen';
 import ScriptConfigScreen from '../screens/ScriptConfigScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
+import DeveloperScreen from '../screens/DeveloperScreen';
 
 
 // 1. 定义路由参数列表
@@ -25,6 +26,7 @@ export type RootStackParamList = {
     ThemeSettings: undefined;
     ScriptConfig: undefined;
     Setting: undefined;
+    Developer: undefined;
     CreatePost: undefined;
     PostDetail: { post: any };
 };
@@ -76,6 +78,10 @@ const RootNavigator = () => {
             <Stack.Screen
                 name="PostDetail"
                 component={PostDetailScreen}
+            />
+            <Stack.Screen
+                name="Developer"
+                component={DeveloperScreen}
             />
         </Stack.Navigator>
     );

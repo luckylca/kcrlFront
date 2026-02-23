@@ -34,8 +34,6 @@ const TEMPLATE_LIBRARY: TemplateCategory[] = [
             { type: 'logic', name: 'Else 执行起始', command: 'else', icon: 'call-merge' },
             { type: 'logic', name: 'Else 执行闭环', command: '', icon: 'call-missed' },
             { type: 'logic', name: 'If 条件闭环', command: 'fi', icon: 'close-circle-outline' },
-            { type: 'logic', name: 'Loop 循环起始', command: 'for i in {1..10}; do', icon: 'refresh' },
-            { type: 'logic', name: 'Loop 循环闭环', command: 'done', icon: 'check-circle-outline' },
             { type: 'logic', name: 'Delay 延时', command: 'sleep 1', icon: 'clock-outline' },
         ],
     },

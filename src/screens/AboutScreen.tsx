@@ -134,7 +134,7 @@ const AboutScreen = ({ navigation }: any) => {
                     icon="code-tags"
                     title="开发者信息"
                     subtitle="查看源代码和贡献者"
-                    onPress={() => openLink('https://github.com/example')}
+                    onPress={() => navigation.navigate('Developer')}
                     containerColor={theme.colors.tertiaryContainer}
                     contentColor={theme.colors.onTertiaryContainer}
                 />
