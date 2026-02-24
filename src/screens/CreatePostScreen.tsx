@@ -27,6 +27,8 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
+import { pick, types as docTypes, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
+import RNFS from 'react-native-fs';
 import { useScriptStore, SavedScript } from '../store/useScriptStore';
 import OLAPI from '../api/OLAPI';
 
@@ -106,10 +108,11 @@ const CreatePostScreen = ({ navigation }: any) => {
     const [selectedImages, setSelectedImages] = useState<Asset[]>([]);
     const [selectedScript, setSelectedScript] = useState<SavedScript | null>(null);
     const [scriptDialogVisible, setScriptDialogVisible] = useState(false);
+    const [selectedExtFile, setSelectedExtFile] = useState<{ uri: string; name: string; type: string; size?: number } | null>(null);
 
     const savedScripts = useScriptStore(state => state.savedScripts);
 
-    const tags = ['模块', '主题', '工具', '脚本', '其他', '闲聊'];
+    const tags = ['模块', '主题', '工具', '脚本', '闲聊'];
 
     const tagToCategoryMap: Record<string, string> = {
         '模块': 'extension',
@@ -164,6 +167,33 @@ const CreatePostScreen = ({ navigation }: any) => {
         setSelectedScript(null);
     };
 
+    // ── Extension File Picker ──
+    const handlePickExtension = async () => {
+        try {
+            const [result] = await pick({
+                type: [docTypes.allFiles],
+            });
+            if (result) {
+                setSelectedExtFile({
+                    uri: result.uri,
+                    name: result.name || 'unknown_file',
+                    type: result.type || 'application/octet-stream',
+                    size: result.size ?? undefined,
+                });
+            }
+        } catch (err) {
+            if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
+                return; // 用户取消，忽略
+            }
+            setSnackMessage('文件选择失败');
+            setSnackVisible(true);
+        }
+    };
+
+    const removeExtension = () => {
+        setSelectedExtFile(null);
+    };
+
     // ── Publish ──
     const handlePublish = async () => {
         if (!canSubmit) {
@@ -195,26 +225,41 @@ const CreatePostScreen = ({ navigation }: any) => {
                 };
             }
 
-            // Attach script config if selected
+            // Attach script .sh file via file field
             if (selectedScript) {
-                const scriptJson = JSON.stringify({
-                    name: selectedScript.name,
-                    steps: selectedScript.steps,
-                });
-                const RNFS = require('react-native-fs');
-                const tmpPath = `${RNFS.CachesDirectoryPath}/script_${Date.now()}.json`;
-                await RNFS.writeFile(tmpPath, scriptJson, 'utf8');
-                postData.config = {
-                    uri: Platform.OS === 'android' ? `file://${tmpPath}` : tmpPath,
-                    type: 'application/json',
-                    name: `${selectedScript.name}.json`,
+                const safeName = selectedScript.name.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+                const SCRIPTS_DIR = `${RNFS.ExternalDirectoryPath}/scripts`;
+                const shPath = `${SCRIPTS_DIR}/${safeName}.sh`;
+                const shExists = await RNFS.exists(shPath);
+                if (shExists) {
+                    postData.file = {
+                        uri: Platform.OS === 'android' ? `file://${shPath}` : shPath,
+                        type: 'application/x-sh',
+                        name: `${safeName}.sh`,
+                    };
+                } else {
+                    setSnackMessage(`脚本文件 ${safeName}.sh 不存在，请先保存脚本`);
+                    setSnackVisible(true);
+                    setIsUploading(false);
+                    return;
+                }
+            }
+
+            // Attach extension file (any file) to file field
+            if (selectedExtFile) {
+                postData.file = {
+                    uri: selectedExtFile.uri,
+                    type: selectedExtFile.type,
+                    name: selectedExtFile.name,
                 };
             }
 
             const result = await OLAPI.uploadPost(postData);
 
             if (result.success) {
-                navigation.goBack();
+                setSnackMessage('发布完成，正在审核');
+                setSnackVisible(true);
+                setTimeout(() => navigation.goBack(), 1500);
             } else {
                 setSnackMessage(result.message || '发布失败');
                 setSnackVisible(true);
@@ -420,6 +465,58 @@ const CreatePostScreen = ({ navigation }: any) => {
                             <MaterialCommunityIcons name="plus" size={22} color={theme.colors.tertiary} />
                             <Text variant="labelMedium" style={{ color: theme.colors.tertiary, marginLeft: 6 }}>
                                 选择脚本
+                            </Text>
+                        </TouchableOpacity>
+                    </Surface>
+
+                    {/* ── 扩展文件选择 ── */}
+                    <Surface style={[styles.attachSection, { backgroundColor: theme.colors.elevation.level1, marginTop: 12 }]} elevation={0}>
+                        <View style={styles.attachHeader}>
+                            <MaterialCommunityIcons name="file-plus" size={20} color={theme.colors.secondary} />
+                            <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
+                                扩展附件
+                            </Text>
+                            <Text variant="labelSmall" style={{ marginLeft: 8, color: theme.colors.outline }}>
+                                支持任意文件
+                            </Text>
+                        </View>
+
+                        {selectedExtFile && (
+                            <Surface
+                                style={[styles.scriptChip, { backgroundColor: theme.colors.secondaryContainer }]}
+                                elevation={0}
+                            >
+                                <MaterialCommunityIcons name="file-outline" size={18} color={theme.colors.onSecondaryContainer} />
+                                <View style={{ flex: 1, marginLeft: 8 }}>
+                                    <Text
+                                        variant="bodyMedium"
+                                        style={{ color: theme.colors.onSecondaryContainer, fontWeight: '500' }}
+                                        numberOfLines={1}
+                                    >
+                                        {selectedExtFile.name}
+                                    </Text>
+                                    {selectedExtFile.size != null && (
+                                        <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer + '80', marginTop: 2 }}>
+                                            {selectedExtFile.size > 1024 * 1024
+                                                ? `${(selectedExtFile.size / 1024 / 1024).toFixed(1)} MB`
+                                                : `${(selectedExtFile.size / 1024).toFixed(1)} KB`}
+                                        </Text>
+                                    )}
+                                </View>
+                                <TouchableOpacity onPress={removeExtension} activeOpacity={0.7}>
+                                    <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.onSecondaryContainer + '80'} />
+                                </TouchableOpacity>
+                            </Surface>
+                        )}
+
+                        <TouchableOpacity
+                            style={[styles.addAttachBtn, { borderColor: theme.colors.outline + '60' }]}
+                            onPress={handlePickExtension}
+                            activeOpacity={0.7}
+                        >
+                            <MaterialCommunityIcons name="plus" size={22} color={theme.colors.secondary} />
+                            <Text variant="labelMedium" style={{ color: theme.colors.secondary, marginLeft: 6 }}>
+                                选择文件
                             </Text>
                         </TouchableOpacity>
                     </Surface>

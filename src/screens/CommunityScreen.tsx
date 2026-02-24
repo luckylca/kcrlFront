@@ -8,21 +8,6 @@ import OLAPI, { Post } from '../api/OLAPI';
 
 const { width } = Dimensions.get('window');
 
-// ─── Helper: 时间格式化 ────────────────────────────────────────────
-const formatTime = (dateStr: string) => {
-    try {
-        const date = new Date(dateStr);
-        const now = new Date();
-        const diff = (now.getTime() - date.getTime()) / 1000;
-        if (diff < 60) { return '刚刚'; }
-        if (diff < 3600) { return `${Math.floor(diff / 60)} 分钟前`; }
-        if (diff < 86400) { return `${Math.floor(diff / 3600)} 小时前`; }
-        if (diff < 604800) { return `${Math.floor(diff / 86400)} 天前`; }
-        return date.toLocaleDateString();
-    } catch {
-        return dateStr;
-    }
-};
 
 // Component for Animated Filter Chip
 const FilterChip = ({
@@ -101,7 +86,6 @@ const PostItem = ({ item, theme, onPress }: { item: Post, theme: any, onPress?: 
                                 <Avatar.Text size={28} label={(item.author || '?')[0]} style={{ marginRight: 8, backgroundColor: theme.colors.secondaryContainer }} color={theme.colors.onSecondaryContainer} />
                                 <View>
                                     <Text variant="labelMedium" style={{ color: theme.colors.onSurface }}>{item.author}</Text>
-                                    <Text variant="labelSmall" style={{ color: theme.colors.outline }}>{formatTime(item.created_at)}</Text>
                                 </View>
                             </View>
                             <Surface style={[styles.tagChip, { backgroundColor: theme.colors.tertiaryContainer }]} elevation={0}>
@@ -145,9 +129,9 @@ const CommunityScreen = ({ navigation }: any) => {
     const filters = ['全部', '模块', '主题', '工具', '脚本', '闲聊'];
 
     // ── Fetch Posts ──
-    const fetchPosts = useCallback(async (category?: string) => {
+    const fetchPosts = useCallback(async (category?: string, search?: string) => {
         try {
-            const result = await OLAPI.getPosts({ category });
+            const result = await OLAPI.getPosts({ category, search });
             if (result.success && result.data) {
                 setPosts(result.data);
             } else {
@@ -186,7 +170,15 @@ const CommunityScreen = ({ navigation }: any) => {
         ]).start();
     }, []);
 
-    // Re-fetch when filter changes
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            setLoading(true);
+            fetchPosts(selectedFilter, searchQuery).finally(() => setLoading(false));
+        }, 500); // 用户停止输入 500ms 后再搜索
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery, selectedFilter, fetchPosts]);
+
     useEffect(() => {
         setLoading(true);
         fetchPosts(selectedFilter === '全部' ? undefined : selectedFilter).finally(() => setLoading(false));
@@ -299,7 +291,7 @@ const CommunityScreen = ({ navigation }: any) => {
             ) : (
                 <FlatList
                     data={posts}
-                    renderItem={({ item }) => <PostItem item={item} theme={theme} onPress={() => navigation.navigate('PostDetail', { post: item })} />}
+                    renderItem={({ item }) => <PostItem item={item} theme={theme} onPress={() => { console.log(item); navigation.navigate('PostDetail', { post: item }) }} />}
                     keyExtractor={item => item.id}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
@@ -407,6 +399,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         elevation: 0, // Removed card elevation for cleaner look or set to 1
         borderWidth: 1,
+        height: 130,
         borderColor: 'rgba(0,0,0,0.05)', // Subtle border
     },
     postHeader: {

@@ -5,6 +5,9 @@ import {
     StyleSheet,
     ScrollView,
     ActivityIndicator,
+    TouchableOpacity,
+    Linking,
+    Alert,
 } from 'react-native';
 import {
     Appbar,
@@ -13,8 +16,11 @@ import {
     Surface,
     Avatar,
 } from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OLAPI from '../api/OLAPI';
+
+const API_BASE_URL = 'http://47.113.189.138/';
 
 // ─── Helper: 时间格式化 ────────────────────────────────────────────
 const formatTime = (dateStr: string) => {
@@ -32,6 +38,8 @@ const formatTime = (dateStr: string) => {
     }
 };
 
+
+
 // ─── PostDetailScreen ──────────────────────────────────────────────
 const PostDetailScreen = ({ navigation, route }: any) => {
     const theme = useTheme();
@@ -45,13 +53,32 @@ const PostDetailScreen = ({ navigation, route }: any) => {
     useEffect(() => {
         if (post?.id) {
             setLoading(true);
+            console.log("post.id", post.id);
             OLAPI.getPostById(post.id).then(result => {
                 if (result.success && result.data) {
-                    setFullPost(result.data);
+                    const postData = Array.isArray(result.data) ? result.data[0] : result.data;
+                    setFullPost(postData);
+                    console.log("postData", postData);
                 }
             }).finally(() => setLoading(false));
         }
     }, [post?.id]);
+
+    const handleDownload = (filePath: string) => {
+        const fullUrl = filePath.startsWith('http') ? filePath : `${API_BASE_URL}${filePath}`;
+        Linking.canOpenURL(fullUrl).then(supported => {
+            if (supported) {
+                Linking.openURL(fullUrl);
+            } else {
+                Alert.alert('无法打开', '无法打开此文件链接');
+            }
+        });
+    };
+
+    // Extract filename from path
+    const getFileName = (filePath: string) => {
+        return filePath.split('/').pop() || '未知文件';
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -91,6 +118,32 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                     <Text variant="bodyLarge" style={[styles.body, { color: theme.colors.onSurfaceVariant }]}>
                         {fullPost?.content ?? '暂无内容'}
                     </Text>
+
+                    {/* ── 附件区域 ── */}
+                    {fullPost?.file_path && (
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => handleDownload(fullPost.file_path)}
+                            style={styles.attachmentSection}
+                        >
+                            <Surface
+                                style={[styles.attachmentCard, { backgroundColor: theme.colors.elevation.level1 }]}
+                                elevation={1}
+                            >
+                                <View style={[styles.attachmentIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <MaterialCommunityIcons name="file-download-outline" size={24} color={theme.colors.onPrimaryContainer} />
+                                </View>
+                                <Text
+                                    variant="bodyMedium"
+                                    style={{ flex: 1, marginLeft: 14, color: theme.colors.onSurface, fontWeight: '500' }}
+                                    numberOfLines={1}
+                                >
+                                    {getFileName(fullPost.file_path)}
+                                </Text>
+                                <MaterialCommunityIcons name="open-in-new" size={20} color={theme.colors.primary} />
+                            </Surface>
+                        </TouchableOpacity>
+                    )}
                 </ScrollView>
             )}
         </View>
@@ -107,6 +160,23 @@ const styles = StyleSheet.create({
     title: { fontWeight: 'bold', marginBottom: 16 },
     body: { lineHeight: 24 },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    // ── Attachment Styles ──
+    attachmentSection: {
+        marginTop: 28,
+    },
+    attachmentCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 14,
+        borderRadius: 16,
+    },
+    attachmentIconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
 
 export default PostDetailScreen;
