@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://47.113.189.138:80'; // 即实际使用的远端服务器
+const API_BASE_URL = 'http://47.113.189.138/'; // 即实际使用的远端服务器
 
 export interface Post {
   id: string;
@@ -69,67 +69,156 @@ class ApiService {
   }
 
   async uploadPost(data: PostData): Promise<ApiResponse> {
-    try {
-      const formData = new FormData();
-      formData.append('title', data.title);
-      formData.append('author', data.author);
-      formData.append('content', data.content);
-      formData.append('summary', data.summary);
-      formData.append('category', data.category);
+        try {
+            const formData = new FormData();
+            
+            const title = data.title?.trim() || '';
+            const author = data.author?.trim() || '';
+            const summary = data.summary?.trim() || '';
+            const content = data.content?.trim() || '';
+            const category = data.category?.trim() || 'article';
 
-      // 处理普通文件上传（扩展和脚本类型）
-      if (data.file) {
-        formData.append('file', {
-          uri: data.file.uri,
-          type: data.file.type || 'application/octet-stream',
-          name: data.file.name || 'file',
-        } as any);
-      }
+            const VALID_CATEGORIES = ['extension', 'script', 'theme', 'article'];
 
-      // 处理主题类型的双重文件上传
-      if (data.category === 'theme') {
-        // 处理图片文件
-        if (data.image) {
-          formData.append('image', {
-            uri: data.image.uri,
-            type: data.image.type || 'image/png',
-            name: data.image.name || 'image.png',
-          } as any);
+            if (!title) {
+                return {
+                    success: false,
+                    message: '标题不能为空',
+                };
+            }
+            if (title.length > 255) {
+                return {
+                    success: false,
+                    message: '标题长度不能超过255个字符',
+                };
+            }
+            if (!author) {
+                return {
+                    success: false,
+                    message: '作者不能为空',
+                };
+            }
+            if (author.length > 100) {
+                return {
+                    success: false,
+                    message: '作者名称长度不能超过100个字符',
+                };
+            }
+            if (summary.length > 500) {
+                return {
+                    success: false,
+                    message: '简介长度不能超过500个字符',
+                };
+            }
+            if (!VALID_CATEGORIES.includes(category)) {
+                return {
+                    success: false,
+                    message: `无效的板块类型，可选: ${VALID_CATEGORIES.join(', ')}`,
+                };
+            }
+
+            formData.append('title', title);
+            formData.append('author', author);
+            formData.append('content', content);
+            formData.append('summary', summary);
+            formData.append('category', category);
+
+            if (category === 'extension') {
+                if (!data.file) {
+                    return {
+                        success: false,
+                        message: '扩展板块必须上传压缩包文件',
+                    };
+                }
+                formData.append('file', {
+                    uri: data.file.uri,
+                    type: data.file.type || 'application/zip',
+                    name: data.file.name || 'extension.zip',
+                } as any);
+            } else if (category === 'script') {
+                if (!data.file) {
+                    return {
+                        success: false,
+                        message: '脚本文板必须上传脚本文件',
+                    };
+                }
+                formData.append('file', {
+                    uri: data.file.uri,
+                    type: data.file.type || 'application/octet-stream',
+                    name: data.file.name || 'script.sh',
+                } as any);
+            } else if (category === 'theme') {
+                const hasImage = !!data.image;
+                const hasJson = !!data.config;
+
+                if (!hasImage && !hasJson) {
+                    return {
+                        success: false,
+                        message: '主题板块必须上传图片或JSON配置文件',
+                    };
+                }
+
+                if (hasImage) {
+                    formData.append('image', {
+                        uri: data.image.uri,
+                        type: data.image.type || 'image/png',
+                        name: data.image.name || 'image.png',
+                    } as any);
+                }
+
+                if (hasJson) {
+                    formData.append('config', {
+                        uri: data.config.uri,
+                        type: data.config.type || 'application/json',
+                        name: data.config.name || 'config.json',
+                    } as any);
+                }
+            } else if (category === 'article') {
+                if (!content) {
+                    return {
+                        success: false,
+                        message: '文章板块必须填写内容',
+                    };
+                }
+            }
+
+            console.log('Uploading with formData:', {
+                title,
+                author,
+                summary,
+                category,
+                hasFile: !!data.file,
+                hasImage: !!data.image,
+                hasConfig: !!data.config,
+            });
+
+            const response = await fetch(`${API_BASE_URL}/upload.php`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                },
+                body: formData,
+            });
+
+            const responseText = await response.text();
+            console.log('Response status:', response.status);
+            console.log('Response text:', responseText);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}, body: ${responseText}`);
+            }
+
+            const responseData = JSON.parse(responseText);
+            return responseData;
+        } catch (error) {
+            console.error('Error uploading post:', error);
+            return {
+                success: false,
+                message: '上传失败',
+                error: error instanceof Error ? error.message : '未知错误',
+            };
         }
-
-        // 处理配置文件
-        if (data.config) {
-          formData.append('config', {
-            uri: data.config.uri,
-            type: data.config.type || 'application/json',
-            name: data.config.name || 'config.json',
-          } as any);
-        }
-      }
-
-      const response = await fetch(`${API_BASE_URL}/upload.php`, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      return responseData;
-    } catch (error) {
-      console.error('Error uploading post:', error);
-      return {
-        success: false,
-        message: '上传失败',
-        error: error instanceof Error ? error.message : '未知错误',
-      };
     }
-  }
 
   async getPostById(id: string): Promise<ApiResponse> {
     try {

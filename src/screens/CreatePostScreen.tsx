@@ -111,6 +111,14 @@ const CreatePostScreen = ({ navigation }: any) => {
 
     const tags = ['模块', '主题', '工具', '脚本', '其他', '闲聊'];
 
+    const tagToCategoryMap: Record<string, string> = {
+        '模块': 'extension',
+        '主题': 'theme',
+        '工具': 'article',
+        '脚本': 'script',
+        '帖子': 'article',
+    };
+
     // ── Load saved author name ──
     useEffect(() => {
         OLAPI.getUserInfo().then(info => {
@@ -174,7 +182,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                 author: author.trim(),
                 content: body,
                 summary: body.substring(0, 100),
-                category: selectedTag,
+                category: tagToCategoryMap[selectedTag] || 'article',
             };
 
             // Attach first image if selected
