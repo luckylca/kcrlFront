@@ -128,6 +128,16 @@ const CommunityScreen = ({ navigation }: any) => {
 
     const filters = ['全部', '模块', '主题', '工具', '脚本', '闲聊'];
 
+    // Map Chinese UI labels to API category values
+    const filterToCategoryMap: Record<string, string | undefined> = {
+        '全部': undefined,
+        '模块': 'extension',
+        '主题': 'theme',
+        '工具': 'article',
+        '脚本': 'script',
+        '闲聊': 'article',
+    };
+
     // ── Fetch Posts ──
     const fetchPosts = useCallback(async (category?: string, search?: string) => {
         try {
@@ -143,11 +153,8 @@ const CommunityScreen = ({ navigation }: any) => {
         }
     }, []);
 
+    // Entrance Animations (run once)
     useEffect(() => {
-        setLoading(true);
-        fetchPosts(selectedFilter === '全部' ? undefined : selectedFilter).finally(() => setLoading(false));
-
-        // Run Entrance Animations
         Animated.parallel([
             Animated.timing(filtersSlideAnim, {
                 toValue: 0,
@@ -170,26 +177,25 @@ const CommunityScreen = ({ navigation }: any) => {
         ]).start();
     }, []);
 
+    // Consolidated data-fetching effect (handles both filter & search)
     useEffect(() => {
+        const mappedCategory = filterToCategoryMap[selectedFilter];
+        const delayMs = searchQuery ? 500 : 0; // debounce only for search input
+
         const delayDebounceFn = setTimeout(() => {
             setLoading(true);
-            fetchPosts(selectedFilter, searchQuery).finally(() => setLoading(false));
-        }, 500); // 用户停止输入 500ms 后再搜索
+            fetchPosts(mappedCategory, searchQuery || undefined).finally(() => setLoading(false));
+        }, delayMs);
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchQuery, selectedFilter, fetchPosts]);
 
-    useEffect(() => {
-        setLoading(true);
-        fetchPosts(selectedFilter === '全部' ? undefined : selectedFilter).finally(() => setLoading(false));
-    }, [selectedFilter, fetchPosts]);
-
     // Pull-to-refresh
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await fetchPosts(selectedFilter === '全部' ? undefined : selectedFilter);
+        await fetchPosts(filterToCategoryMap[selectedFilter], searchQuery || undefined);
         setRefreshing(false);
-    }, [selectedFilter, fetchPosts]);
+    }, [selectedFilter, searchQuery, fetchPosts]);
 
 
     const toggleSearch = () => {

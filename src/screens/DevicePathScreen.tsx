@@ -1,11 +1,11 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, InteractionManager } from 'react-native';
-import { Appbar, Text, useTheme, IconButton, Surface, Divider, Portal, ActivityIndicator, Menu } from 'react-native-paper';
+import { Appbar, Text, useTheme, IconButton, Surface, Divider, Portal, ActivityIndicator, Menu, Snackbar } from 'react-native-paper';
 import { useSettingStore } from '../store/useSettingStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DevicesGetter, InputDevice } from '../api/devicesGetter';
-import { CPPAPISocket } from "../api/CPPAPISocket.ts";
+import { CPPAPISocket, KeyInputMonitor } from '../api/CPPAPISocket';
 
 
 const DevicePathScreen = ({ navigation }: any) => {
@@ -16,6 +16,15 @@ const DevicePathScreen = ({ navigation }: any) => {
     const [error, setError] = React.useState<string | null>(null);
     const [devices, setDevices] = React.useState<InputDevice[]>([]);
     const [visible, setVisible] = React.useState(false);
+
+    // ── Listen (监听) state ──
+    const [listeningPath, setListeningPath] = React.useState<string | null>(null);
+    const [snackVisible, setSnackVisible] = React.useState(false);
+    const [snackMessage, setSnackMessage] = React.useState('');
+    const monitorRef = React.useRef<KeyInputMonitor>(new KeyInputMonitor());
+    const socketRef = React.useRef<CPPAPISocket | null>(null);
+    const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+    const hasTriggeredRef = React.useRef(false);
 
     const openMenu = () => setVisible(true);
     const closeMenu = () => setVisible(false);
@@ -57,6 +66,75 @@ const DevicePathScreen = ({ navigation }: any) => {
             fetchDevices();
         });
         return () => task.cancel();
+    }, []);
+
+    // ── Monitor functions ──
+    const startMonitor = async (devicePath: string) => {
+        setListeningPath(devicePath);
+        try {
+            // Reuse existing socket or create new one
+            if (!socketRef.current) {
+                socketRef.current = new CPPAPISocket();
+                const ok = await socketRef.current.init();
+                if (!ok) {
+                    setSnackMessage('Socket 初始化失败');
+                    setSnackVisible(true);
+                    setListeningPath(null);
+                    return;
+                }
+            }
+            const ok = await monitorRef.current.start(socketRef.current, devicePath);
+            if (!ok) {
+                setSnackMessage('启动监听失败');
+                setSnackVisible(true);
+                setListeningPath(null);
+                return;
+            }
+            // Poll for key data
+            hasTriggeredRef.current = false;
+            intervalRef.current = setInterval(async () => {
+                try {
+                    const data = await monitorRef.current.get();
+                    if (data && data.state === 1 && data.keycode && !hasTriggeredRef.current) {
+                        console.log(`检测到按键: ${data.keycode}  设备: ${data.device}`);
+                        hasTriggeredRef.current = true;
+                        setSnackMessage(`检测到按键: ${data.keycode}  设备: ${data.device}`);
+                        setSnackVisible(true);
+                    }
+                    // Reset trigger when state goes back to 0 (key released)
+                    if (data && data.state === 0 && hasTriggeredRef.current) {
+                        hasTriggeredRef.current = false;
+                    }
+                } catch {
+                    // ignore transient errors
+                }
+            }, 500);
+        } catch (e: any) {
+            setSnackMessage('监听出错: ' + (e?.message || '未知'));
+            setSnackVisible(true);
+            setListeningPath(null);
+        }
+    };
+
+    const stopMonitor = async () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        try {
+            await monitorRef.current.stop();
+        } catch { /* ignore */ }
+        setListeningPath(null);
+    };
+
+    // Cleanup on unmount
+    React.useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+            monitorRef.current.stop().catch(() => { });
+        };
     }, []);
 
     return (
@@ -128,6 +206,23 @@ const DevicePathScreen = ({ navigation }: any) => {
                                             </Text>
                                         </View>
                                     </View>
+                                    {/* Listen / Stop button */}
+                                    {listeningPath === item.path ? (
+                                        <IconButton
+                                            icon="stop-circle-outline"
+                                            iconColor={theme.colors.error}
+                                            size={24}
+                                            onPress={stopMonitor}
+                                        />
+                                    ) : (
+                                        <IconButton
+                                            icon="ear-hearing"
+                                            iconColor={listeningPath ? theme.colors.outline + '40' : theme.colors.primary}
+                                            size={24}
+                                            disabled={listeningPath !== null}
+                                            onPress={() => startMonitor(item.path)}
+                                        />
+                                    )}
                                 </TouchableOpacity>
                                 {index < devices.length - 1 && <Divider />}
                             </View>
@@ -135,6 +230,19 @@ const DevicePathScreen = ({ navigation }: any) => {
                     })}
                 </Surface>
             </ScrollView>
+
+            {/* Snackbar for listen results */}
+            <Snackbar
+                visible={snackVisible}
+                onDismiss={() => setSnackVisible(false)}
+                duration={3000}
+                action={listeningPath ? {
+                    label: '停止',
+                    onPress: stopMonitor,
+                } : undefined}
+            >
+                {snackMessage}
+            </Snackbar>
         </View>
     );
 };
