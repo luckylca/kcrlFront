@@ -240,7 +240,20 @@ class ApiService {
       };
     }
   }
+  async getFileSize(file_path: string): Promise<number> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/fileinfo.php?fp=${file_path}`);
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.text().then(text => parseInt(text, 10));
+    } catch (error) {
+      console.error('Error fetching post:', error);
+      return 0;
+    }
+  }
   async saveUserInfo(userInfo: { name: string }): Promise<void> {
     try {
       await AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));

@@ -113,7 +113,13 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         try {
             const fullUrl = getFullUrl(filePath);
             const fileName = (filePath.split('/').pop() || 'script.sh').replace(/\.sh$/i, '');
-
+            const fileSize = await OLAPI.getFileSize(filePath);
+            if (fileSize === 0) {
+                setSnackMessage('获取文件大小失败');
+                setSnackVisible(true);
+                return;
+            }
+            console.log("fileSize", fileSize);
             // Download the .sh content
             const SCRIPTS_DIR = `${RNFS.ExternalDirectoryPath}/scripts`;
             if (!(await RNFS.exists(SCRIPTS_DIR))) {
