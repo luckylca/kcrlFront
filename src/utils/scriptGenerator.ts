@@ -89,6 +89,22 @@ export const generateShellScript = (steps: ScriptStep[], opts?: Opts): string =>
     // 万一 if 没闭合 then（用户没加 then 积木），也吐出来方便你发现问题
     flushIf();
 
-    const script = `#!/system/bin/sh\n\n${out}`.replace(/\n{3,}/g, '\n\n');
-    return script.trimEnd() + '\n';
+    let script = `#!/system/bin/sh\n\n${out}`.replace(/\n{3,}/g, '\n\n');
+    script = script.trimEnd() + '\n';
+
+    // ── 将步骤元数据作为注释附加到末尾，用于社区导入 ──
+    const stepsData = steps.map(s => ({
+        id: s.id,
+        type: s.type,
+        name: s.name,
+        command: s.command,
+        description: s.description,
+        params: s.params,
+    }));
+    const json = JSON.stringify(stepsData);
+    script += '\n# KCRL_STEPS_BEGIN\n';
+    script += `# ${json}\n`;
+    script += '# KCRL_STEPS_END\n';
+
+    return script;
 };

@@ -35,6 +35,7 @@ interface ScriptState {
     // New actions
     saveScript: (name: string, steps: ScriptStep[]) => void;
     deleteSavedScript: (id: string) => void;
+    renameScript: (id: string, newName: string) => void;
     loadScript: (id: string) => void;
     setCurrentScriptName: (name: string) => void;
 }
@@ -83,6 +84,18 @@ export const useScriptStore = create<ScriptState>()(
             deleteSavedScript: (id) => set((state) => ({
                 savedScripts: state.savedScripts.filter(s => s.id !== id)
             })),
+            renameScript: (id, newName) => set((state) => {
+                const script = state.savedScripts.find(s => s.id === id);
+                if (!script) { return {}; }
+                const oldName = script.name;
+                const updatedScripts = state.savedScripts.map(s =>
+                    s.id === id ? { ...s, name: newName, updatedAt: Date.now() } : s
+                );
+                return {
+                    savedScripts: updatedScripts,
+                    currentScriptName: state.currentScriptName === oldName ? newName : state.currentScriptName,
+                };
+            }),
             loadScript: (id) => set((state) => {
                 const script = state.savedScripts.find(s => s.id === id);
                 if (script) {

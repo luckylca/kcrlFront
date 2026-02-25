@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useScriptStore, ScriptStep, ScriptType } from '../store/useScriptStore';
+import { useSettingStore } from '../store/useSettingStore';
 import { useNavigation } from '@react-navigation/native';
 
 import RNFS from 'react-native-fs';
@@ -166,10 +167,13 @@ const ScriptConfigScreen = () => {
         setScripts: setStoreScripts,
         saveScript,
         deleteSavedScript,
+        renameScript,
         loadScript,
         setCurrentScriptName,
         clearScripts
     } = useScriptStore();
+
+    const { keyevent, setKeyevent } = useSettingStore();
 
     // Local State
     const [localScripts, setLocalScripts] = useState<ScriptStep[]>([]);
@@ -194,6 +198,13 @@ const ScriptConfigScreen = () => {
     const [isSaveDialogVisible, setIsSaveDialogVisible] = useState(false);
     const [saveName, setSaveName] = useState('');
     const [saveError, setSaveError] = useState('');
+
+    // Rename Dialog
+    const [isRenameDialogVisible, setIsRenameDialogVisible] = useState(false);
+    const [renameId, setRenameId] = useState('');
+    const [renameOldName, setRenameOldName] = useState('');
+    const [renameName, setRenameName] = useState('');
+    const [renameError, setRenameError] = useState('');
 
     // Initialize local state from store
     useEffect(() => {
@@ -312,6 +323,56 @@ const ScriptConfigScreen = () => {
                 setConfirmDialog(prev => ({ ...prev, visible: false }));
             }
         });
+    };
+
+    // Handle Rename Script (long press)
+    const handleRenameScript = (id: string, oldName: string) => {
+        setRenameId(id);
+        setRenameOldName(oldName);
+        setRenameName(oldName);
+        setRenameError('');
+        setIsRenameDialogVisible(true);
+    };
+
+    const handleConfirmRename = () => {
+        const newName = renameName.trim();
+        if (!newName) {
+            setRenameError('请输入脚本名称');
+            return;
+        }
+        if (newName === renameOldName) {
+            setIsRenameDialogVisible(false);
+            return;
+        }
+        // Check duplicate name
+        if (libraryScripts.some(s => s.name === newName && s.id !== renameId)) {
+            setRenameError('该名称已存在');
+            return;
+        }
+
+        // 1. Rename in script store (also triggers .sh file re-sync)
+        renameScript(renameId, newName);
+
+        // 2. Sync keyevent config: values are stored with .sh suffix (e.g. "scriptName.sh")
+        const oldFileName = `${renameOldName}.sh`;
+        const newFileName = `${newName}.sh`;
+        const updatedKeyevent = { ...keyevent };
+        let changed = false;
+        for (const key of Object.keys(updatedKeyevent)) {
+            const evt = { ...(updatedKeyevent[key] as any) };
+            for (const trigger of ['onpress', 'click', 'dblclick', 'short_press', 'long_press']) {
+                if (evt[trigger] === oldFileName) {
+                    evt[trigger] = newFileName;
+                    changed = true;
+                }
+            }
+            updatedKeyevent[key] = evt;
+        }
+        if (changed) {
+            setKeyevent(updatedKeyevent);
+        }
+
+        setIsRenameDialogVisible(false);
     };
 
     // 单个卡片
@@ -450,6 +511,7 @@ const ScriptConfigScreen = () => {
                                                     }
                                                 ]}
                                                 onPress={() => handleLoadScript(script.id)}
+                                                onLongPress={() => handleRenameScript(script.id, script.name)}
                                             >
                                                 <View style={{ flex: 1 }}>
                                                     <Text variant="bodyMedium" numberOfLines={1} style={{ fontWeight: 'bold' }}>{script.name}</Text>
@@ -526,6 +588,26 @@ const ScriptConfigScreen = () => {
                         <Dialog.Actions>
                             <Button onPress={() => setIsSaveDialogVisible(false)}>取消</Button>
                             <Button onPress={handleConfirmSave}>保存</Button>
+                        </Dialog.Actions>
+                    </Dialog>
+
+                    {/* Rename Script Dialog */}
+                    <Dialog visible={isRenameDialogVisible} onDismiss={() => setIsRenameDialogVisible(false)}>
+                        <Dialog.Title>重命名脚本</Dialog.Title>
+                        <Dialog.Content>
+                            <TextInput
+                                label="新名称"
+                                value={renameName}
+                                onChangeText={setRenameName}
+                                mode="outlined"
+                                autoFocus
+                                error={!!renameError}
+                            />
+                            {!!renameError && <Text style={{ color: theme.colors.error, marginTop: 4 }}>{renameError}</Text>}
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button onPress={() => setIsRenameDialogVisible(false)}>取消</Button>
+                            <Button onPress={handleConfirmRename}>确定</Button>
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
