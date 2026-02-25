@@ -297,7 +297,13 @@ const CommunityScreen = ({ navigation }: any) => {
             ) : (
                 <FlatList
                     data={posts}
-                    renderItem={({ item }) => <PostItem item={item} theme={theme} onPress={() => { console.log(item); navigation.navigate('PostDetail', { post: item }) }} />}
+                    renderItem={({ item }) => (
+                        <PostItem
+                            item={item}
+                            theme={theme}
+                            onPress={() => { navigation.navigate('PostDetail', { post: item, fromTab: 'community' }) }}
+                        />
+                    )}
                     keyExtractor={item => item.id}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}

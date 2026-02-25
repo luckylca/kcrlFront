@@ -148,7 +148,7 @@ const saveToFile = async (state: ScriptState) => {
             const filePath = `${SCRIPTS_DIR}/${safeName}.sh`;
 
             // 2. 使用你的工具生成内容
-            const shContent = generateShellScript(script.steps);
+            const shContent = generateShellScript(script.steps, script.name);
 
             // 3. 写入文件
             await RNFS.writeFile(filePath, shContent, 'utf8');

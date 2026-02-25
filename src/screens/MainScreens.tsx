@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import CustomTabBar, { TabRoute } from '../components/CustomTabBar'; // 刚才写的组件
@@ -21,6 +21,18 @@ const MainScreen = ({ navigation, route }: any) => {
         { key: 'community', title: '社区', icon: 'account-group' },
         { key: 'setting', title: '设置', icon: 'cog' },
     ], []);
+
+    const requestedTabKey = route?.params?.initialTab;
+
+    useEffect(() => {
+        if (!requestedTabKey) return;
+        const targetIndex = routes.findIndex(r => r.key === requestedTabKey);
+        if (targetIndex >= 0 && targetIndex !== activeIndex) {
+            setActiveIndex(targetIndex);
+            pagerRef.current?.setPage(targetIndex);
+        }
+        navigation.setParams({ initialTab: undefined });
+    }, [requestedTabKey, routes, activeIndex, navigation]);
 
     // 2. 处理 Tab 点击（联动 PagerView）
     const handleTabPress = (index: number) => {

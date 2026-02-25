@@ -25,26 +25,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RNFS from 'react-native-fs';
 import OLAPI from '../api/OLAPI';
 import { useScriptStore } from '../store/useScriptStore';
-import { parseScriptSteps } from '../utils/scriptParser';
+import { parseScriptSteps, parseInnerName } from '../utils/scriptParser';
 
 const API_BASE_URL = 'http://47.113.189.138/';
 const SCREEN_WIDTH = Dimensions.get('window').width;
-
-// ─── Helper: 时间格式化 ────────────────────────────────────────────
-const formatTime = (dateStr: string) => {
-    try {
-        const date = new Date(dateStr);
-        const now = new Date();
-        const diff = (now.getTime() - date.getTime()) / 1000;
-        if (diff < 60) { return '刚刚'; }
-        if (diff < 3600) { return `${Math.floor(diff / 60)} 分钟前`; }
-        if (diff < 86400) { return `${Math.floor(diff / 3600)} 小时前`; }
-        if (diff < 604800) { return `${Math.floor(diff / 86400)} 天前`; }
-        return date.toLocaleDateString();
-    } catch {
-        return dateStr;
-    }
-};
 
 // ─── Helper: 判断文件类型 ──────────────────────────────────────────
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'];
@@ -68,12 +52,15 @@ const PostDetailScreen = ({ navigation, route }: any) => {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const post = route.params?.post;
+    const fromTab = route.params?.fromTab;
 
     const [fullPost, setFullPost] = useState(post);
     const [loading, setLoading] = useState(false);
     const [snackVisible, setSnackVisible] = useState(false);
     const [snackMessage, setSnackMessage] = useState('');
     const [saving, setSaving] = useState(false);
+    const [resolvedScriptName, setResolvedScriptName] = useState<string | null>(null);
+    const [fileSize, setFileSize] = useState<number>(0);
 
     const saveScript = useScriptStore(state => state.saveScript);
 
@@ -96,6 +83,37 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         return filePath.startsWith('http') ? filePath : `${API_BASE_URL}${filePath}`;
     };
 
+    // 获取sh脚本内部名字
+    useEffect(() => {
+        if (fullPost?.file_path && isShellScript(fullPost.file_path)) {
+            const url = getFullUrl(fullPost.file_path);
+            fetch(url)
+                .then(res => res.text())
+                .then(content => {
+                    const innerName = parseInnerName(content);
+                    if (innerName) {
+                        setResolvedScriptName(innerName);
+                    }
+                })
+        }
+    }, [fullPost?.file_path]);
+
+    // 获取文件大小
+    useEffect(() => {
+        if (fullPost?.file_path) {
+            OLAPI.getFileSize(fullPost.file_path).then(size => {
+                if (size > 0) { setFileSize(size); }
+            });
+        }
+    }, [fullPost?.file_path]);
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes <= 0) { return ''; }
+        if (bytes < 1024) { return `${bytes}B`; }
+        if (bytes < 1024 * 1024) { return `${(bytes / 1024).toFixed(1)}KB`; }
+        return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+    };
+
     const handleOpenInBrowser = (filePath: string) => {
         const fullUrl = getFullUrl(filePath);
         Linking.canOpenURL(fullUrl).then(supported => {
@@ -107,20 +125,13 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         });
     };
 
-    // Download .sh and save to script store
+    // 下载sh脚本
     const handleSaveShScript = async (filePath: string) => {
         setSaving(true);
         try {
             const fullUrl = getFullUrl(filePath);
             const fileName = (filePath.split('/').pop() || 'script.sh').replace(/\.sh$/i, '');
-            const fileSize = await OLAPI.getFileSize(filePath);
-            if (fileSize === 0) {
-                setSnackMessage('获取文件大小失败');
-                setSnackVisible(true);
-                return;
-            }
-            console.log("fileSize", fileSize);
-            // Download the .sh content
+            // 下载sh脚本
             const SCRIPTS_DIR = `${RNFS.ExternalDirectoryPath}/scripts`;
             if (!(await RNFS.exists(SCRIPTS_DIR))) {
                 await RNFS.mkdir(SCRIPTS_DIR);
@@ -132,26 +143,28 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                 toFile: localPath,
             }).promise;
 
-            // Read downloaded content
+            // 读取下载内容
             const shContent = await RNFS.readFile(localPath, 'utf8');
 
-            // Try to parse embedded KCRL steps metadata
+            // 设置名字
+            const innerName = parseInnerName(shContent);
+            const scriptName = innerName || fileName;
+
+            // 解码出步骤
             const parsedSteps = parseScriptSteps(shContent);
 
             if (parsedSteps && parsedSteps.length > 0) {
-                // Found embedded steps — import with full block structure
-                saveScript(fileName, parsedSteps);
-                setSnackMessage(`脚本 "${fileName}" 已导入 (${parsedSteps.length} 个步骤)`);
+                saveScript(scriptName, parsedSteps);
+                setSnackMessage(`脚本 "${scriptName}" 已导入 (${parsedSteps.length} 个步骤)`);
             } else {
-                // No metadata — save as single raw command step
-                saveScript(fileName, [{
+                saveScript(scriptName, [{
                     id: Date.now().toString(),
                     type: 'other',
-                    name: fileName,
+                    name: scriptName,
                     command: shContent,
-                    description: `从社区下载: ${fullPost?.title || fileName}`,
+                    description: `从社区下载: ${fullPost?.title || scriptName}`,
                 }]);
-                setSnackMessage(`脚本 "${fileName}" 已保存 (原始脚本)`);
+                setSnackMessage(`脚本 "${scriptName}" 已保存 (原始脚本)`);
             }
             setSnackVisible(true);
         } catch (e: any) {
@@ -163,7 +176,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         }
     };
 
-    // Extract filename from path
+    // 获取文件名
     const getFileName = (filePath: string) => {
         return filePath.split('/').pop() || '未知文件';
     };
@@ -174,7 +187,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
 
         const filePath = fullPost.file_path;
 
-        // ── Image: inline preview, tap to open in browser ──
+        // ── Image ──
         if (isImageFile(filePath)) {
             const imageUrl = getFullUrl(filePath);
             return (
@@ -195,7 +208,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                             <View style={[styles.imageOverlay, { backgroundColor: theme.colors.surface + 'CC' }]}>
                                 <MaterialCommunityIcons name="download" size={16} color={theme.colors.primary} />
                                 <Text variant="labelSmall" style={{ color: theme.colors.primary, marginLeft: 4, fontWeight: '600' }}>
-                                    点击下载原图
+                                    点击下载原图{fileSize > 0 ? ` (${formatFileSize(fileSize)})` : ''}
                                 </Text>
                             </View>
                         </Surface>
@@ -204,7 +217,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
             );
         }
 
-        // ── .sh file: save to script config ──
+        // ── .sh file ──
         if (isShellScript(filePath)) {
             return (
                 <View style={styles.attachmentSection}>
@@ -224,10 +237,10 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                                 style={{ color: theme.colors.onSurface, fontWeight: '500' }}
                                 numberOfLines={1}
                             >
-                                {getFileName(filePath)}
+                                {resolvedScriptName || getFileName(filePath)}
                             </Text>
                             <Text variant="labelSmall" style={{ color: theme.colors.outline, marginTop: 2 }}>
-                                Shell 脚本
+                                Shell 脚本{fileSize > 0 ? ` · ${formatFileSize(fileSize)}` : ''}
                             </Text>
                         </View>
                         <Button
@@ -247,7 +260,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
             );
         }
 
-        // ── Other files: open in browser ──
+        // ── Other files ──
         return (
             <View style={styles.attachmentSection}>
                 <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '600', marginBottom: 12 }}>
@@ -269,7 +282,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                             style={{ flex: 1, marginLeft: 14, color: theme.colors.onSurface, fontWeight: '500' }}
                             numberOfLines={1}
                         >
-                            {getFileName(filePath)}
+                            {getFileName(filePath)}{fileSize > 0 ? ` (${formatFileSize(fileSize)})` : ''}
                         </Text>
                         <MaterialCommunityIcons name="open-in-new" size={20} color={theme.colors.primary} />
                     </Surface>
@@ -278,11 +291,23 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         );
     };
 
+    const handleBack = () => {
+        if (fromTab === 'community') {
+            navigation.navigate('MainTabs', { initialTab: 'community' });
+            return;
+        }
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
+
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {/* ── Appbar ── */}
             <Appbar.Header style={{ backgroundColor: 'transparent' }} statusBarHeight={insets.top}>
-                <Appbar.BackAction onPress={() => navigation.goBack()} />
+                <Appbar.BackAction onPress={handleBack} />
                 <Appbar.Content title={fullPost?.title ?? '帖子详情'} titleStyle={{ fontWeight: 'bold', fontSize: 18 }} />
                 <Appbar.Action icon="dots-vertical" onPress={() => { }} />
             </Appbar.Header>
@@ -299,9 +324,6 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                             <Avatar.Text size={40} label={(fullPost?.author || '?')[0]} style={{ backgroundColor: theme.colors.secondaryContainer }} color={theme.colors.onSecondaryContainer} />
                             <View style={{ marginLeft: 12, flex: 1 }}>
                                 <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.onSurface }}>{fullPost?.author ?? '匿名用户'}</Text>
-                                <Text variant="labelSmall" style={{ color: theme.colors.outline, marginTop: 2 }}>
-                                    {fullPost?.created_at ? formatTime(fullPost.created_at) : '未知时间'}
-                                </Text>
                             </View>
                             <Surface style={[styles.tagBadge, { backgroundColor: theme.colors.tertiaryContainer }]} elevation={0}>
                                 <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{fullPost?.category ?? '其他'}</Text>

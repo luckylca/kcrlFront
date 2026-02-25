@@ -260,7 +260,7 @@ const ScriptConfigScreen = () => {
     };
 
     const exportScript = async () => {
-        const shellScript = generateShellScript(localScripts);
+        const shellScript = generateShellScript(localScripts, saveName);
         const fileName = `${saveName || 'script'}.sh`;
         const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
         await RNFS.writeFile(filePath, shellScript, 'utf8')

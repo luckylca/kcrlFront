@@ -26,7 +26,7 @@ const normalizeIfToken = (raw: string) => {
     return raw.trim();
 };
 
-export const generateShellScript = (steps: ScriptStep[], opts?: Opts): string => {
+export const generateShellScript = (steps: ScriptStep[], name: string, opts?: Opts): string => {
     const withStepComments = opts?.withStepComments ?? true;
 
     let out = '';
@@ -105,6 +105,7 @@ export const generateShellScript = (steps: ScriptStep[], opts?: Opts): string =>
     script += '\n# KCRL_STEPS_BEGIN\n';
     script += `# ${json}\n`;
     script += '# KCRL_STEPS_END\n';
+    script += `# INNERNAME=${name}\n`;
 
     return script;
 };

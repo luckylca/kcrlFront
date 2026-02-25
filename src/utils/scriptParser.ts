@@ -53,3 +53,14 @@ export const parseScriptSteps = (shContent: string): ScriptStep[] | null => {
         return null;
     }
 };
+
+/**
+ * 从 .sh 文件内容中解析 INNERNAME 字段。
+ * 查找 `# INNERNAME=xxx` 注释行。
+ *
+ * @returns 脚本真实名称，找不到返回 null
+ */
+export const parseInnerName = (shContent: string): string | null => {
+    const match = shContent.match(/^# INNERNAME=(.+)$/m);
+    return match ? match[1].trim() : null;
+};
