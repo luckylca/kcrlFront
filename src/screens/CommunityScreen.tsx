@@ -8,6 +8,12 @@ import OLAPI, { Post } from '../api/OLAPI';
 
 const { width } = Dimensions.get('window');
 
+const categoryToNameMap: Record<string, string> = {
+    'extension': '扩展',
+    'script': '脚本',
+    'theme': '主题',
+    'article': '帖子',
+};
 
 // Component for Animated Filter Chip
 const FilterChip = ({
@@ -89,7 +95,7 @@ const PostItem = ({ item, theme, onPress }: { item: Post, theme: any, onPress?: 
                                 </View>
                             </View>
                             <Surface style={[styles.tagChip, { backgroundColor: theme.colors.tertiaryContainer }]} elevation={0}>
-                                <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{item.category}</Text>
+                                <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{categoryToNameMap[item.category] || item.category}</Text>
                             </Surface>
                         </View>
                         <Text variant="titleMedium" style={{ fontWeight: 'bold', marginTop: 12, marginBottom: 4 }}>{item.title}</Text>
@@ -126,16 +132,15 @@ const CommunityScreen = ({ navigation }: any) => {
     // 3. FAB Pop-in Animation
     const fabScaleAnim = useRef(new Animated.Value(0)).current;
 
-    const filters = ['全部', '模块', '主题', '工具', '脚本', '闲聊'];
+    const filters = ['全部', '扩展', '主题', '脚本', '帖子'];
 
     // Map Chinese UI labels to API category values
     const filterToCategoryMap: Record<string, string | undefined> = {
-        '全部': undefined,
-        '模块': 'extension',
-        '主题': 'theme',
-        '工具': 'article',
-        '脚本': 'script',
-        '闲聊': 'article',
+      '全部': undefined,
+      '扩展': 'extension',
+      '主题': 'theme',
+      '脚本': 'script',
+      '帖子': 'article',
     };
 
     // ── Fetch Posts ──

@@ -108,16 +108,20 @@ const CreatePostScreen = ({ navigation }: any) => {
     const [selectedImages, setSelectedImages] = useState<Asset[]>([]);
     const [selectedScript, setSelectedScript] = useState<SavedScript | null>(null);
     const [scriptDialogVisible, setScriptDialogVisible] = useState(false);
-    const [selectedExtFile, setSelectedExtFile] = useState<{ uri: string; name: string; type: string; size?: number } | null>(null);
+    const [selectedExtFile, setSelectedExtFile] = useState<{
+      uri: string;
+      name: string;
+      type: string;
+      size?: number;
+    } | null>(null);
 
     const savedScripts = useScriptStore(state => state.savedScripts);
 
-    const tags = ['模块', '主题', '工具', '脚本', '闲聊'];
+    const tags = ['扩展', '主题', '脚本', '帖子'];
 
     const tagToCategoryMap: Record<string, string> = {
-        '模块': 'extension',
+        '扩展': 'extension',
         '主题': 'theme',
-        '工具': 'article',
         '脚本': 'script',
         '帖子': 'article',
     };
