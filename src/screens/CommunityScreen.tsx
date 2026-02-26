@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Animated, Dimensions, TouchableOpacity, FlatList, Easing, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Animated, Dimensions, TouchableOpacity, FlatList, Easing, RefreshControl, ActivityIndicator } from 'react-native';
 import { Searchbar, Text, useTheme, FAB, Surface, Avatar, Card, TouchableRipple } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,8 +46,14 @@ const FilterChip = ({
             >
                 <Surface
                     style={[
-                        styles.filterChip,
                         {
+                            paddingHorizontal: 20,
+                            paddingVertical: 10,
+                            borderRadius: 16,
+                            marginRight: 10,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minWidth: 60,
                             backgroundColor: isSelected ? theme.colors.primary : theme.colors.surface,
                             borderColor: isSelected ? 'transparent' : theme.colors.outline,
                             borderWidth: isSelected ? 0 : 1,
@@ -81,20 +87,29 @@ const PostItem = ({ item, theme, onPress }: { item: Post, theme: any, onPress?: 
                 onPress={onPress}
                 onPressIn={onPressIn}
                 onPressOut={onPressOut}
-                style={[styles.postCard, { backgroundColor: theme.colors.surface }]}
+                style={{
+                    marginBottom: 16,
+                    borderRadius: 20,
+                    overflow: 'hidden',
+                    elevation: 0,
+                    borderWidth: 1,
+                    height: 130,
+                    borderColor: 'rgba(0,0,0,0.05)',
+                    backgroundColor: theme.colors.surface
+                }}
                 borderless
                 rippleColor="rgba(0, 0, 0, .1)"
             >
                 <View>
                     <Card.Content>
-                        <View style={styles.postHeader}>
-                            <View style={styles.authorContainer}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Avatar.Text size={28} label={(item.author || '?')[0]} style={{ marginRight: 8, backgroundColor: theme.colors.secondaryContainer }} color={theme.colors.onSecondaryContainer} />
                                 <View>
                                     <Text variant="labelMedium" style={{ color: theme.colors.onSurface }}>{item.author}</Text>
                                 </View>
                             </View>
-                            <Surface style={[styles.tagChip, { backgroundColor: theme.colors.tertiaryContainer }]} elevation={0}>
+                            <Surface style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: theme.colors.tertiaryContainer }} elevation={0}>
                                 <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{categoryToNameMap[item.category] || item.category}</Text>
                             </Surface>
                         </View>
@@ -236,30 +251,30 @@ const CommunityScreen = ({ navigation }: any) => {
 
     // Extracted render logic to keep render function clean
     const renderHeader = () => (
-        <View style={[styles.headerContainer, { paddingTop: insets.top + 8 }]}>
-            <View style={styles.headerRow}>
+        <View style={{ paddingBottom: 8, backgroundColor: 'transparent', zIndex: 1, paddingTop: insets.top + 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, justifyContent: 'space-between', height: 56 }}>
                 {!isSearchExpanded && (
                     <Animated.View style={{ opacity: iconOpacity, flex: 1, transform: [{ translateX: searchAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -20] }) }] }}>
                         <Text variant="headlineMedium" style={{ fontWeight: 'bold', color: theme.colors.onBackground }}>社区</Text>
                     </Animated.View>
                 )}
 
-                <Animated.View style={[styles.searchContainer, { width: searchWidth }]}>
+                <Animated.View style={{ height: 48, justifyContent: 'center', alignItems: 'flex-end', width: searchWidth }}>
                     {isSearchExpanded ? (
                         <Searchbar
                             ref={inputRef}
                             placeholder="搜索主题..."
                             onChangeText={setSearchQuery}
                             value={searchQuery}
-                            style={[styles.searchBar, { backgroundColor: theme.colors.elevation.level2 }]}
-                            inputStyle={styles.searchInput}
+                            style={{ flex: 1, borderRadius: 24, height: 44, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)', backgroundColor: theme.colors.elevation.level2 }}
+                            inputStyle={{ minHeight: 0, alignSelf: 'center' }}
                             icon="arrow-left"
                             onIconPress={toggleSearch}
                             elevation={0} // Removed default elevation shadow
                         />
                     ) : (
                         <TouchableOpacity onPress={toggleSearch} activeOpacity={0.7} style={{ borderRadius: 24 }}>
-                            <Surface style={[styles.searchIconBtn, { backgroundColor: theme.colors.elevation.level2 }]} elevation={0}>
+                            <Surface style={{ width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.elevation.level2 }} elevation={0}>
                                 <MaterialCommunityIcons name="magnify" size={24} color={theme.colors.onSurface} />
                             </Surface>
                         </TouchableOpacity>
@@ -268,14 +283,14 @@ const CommunityScreen = ({ navigation }: any) => {
             </View>
 
             {/* Filters */}
-            <Animated.ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterContainer}
-                style={{
-                    opacity: filtersFadeAnim,
-                    transform: [{ translateX: filtersSlideAnim }]
-                }}
+                <Animated.ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center' }}
+                    style={{
+                        opacity: filtersFadeAnim,
+                        transform: [{ translateX: filtersSlideAnim }]
+                    }}
             >
                 {filters.map((filter) => (
                     <FilterChip
@@ -291,11 +306,11 @@ const CommunityScreen = ({ navigation }: any) => {
     );
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
             {renderHeader()}
 
             {loading && posts.length === 0 ? (
-                <View style={styles.loadingContainer}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                     <Text variant="bodyMedium" style={{ color: theme.colors.outline, marginTop: 12 }}>加载中...</Text>
                 </View>
@@ -310,10 +325,10 @@ const CommunityScreen = ({ navigation }: any) => {
                         />
                     )}
                     keyExtractor={item => item.id}
-                    contentContainerStyle={styles.listContent}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120, paddingTop: 8 }}
                     showsVerticalScrollIndicator={false}
                     ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
+                        <View style={{ paddingTop: 80, alignItems: 'center' }}>
                             <Text variant="bodyLarge" style={{ color: theme.colors.outline, textAlign: 'center' }}>暂时没有帖子{"\n"}快来发第一篇帖子吧 ✨</Text>
                         </View>
                     }
@@ -330,8 +345,9 @@ const CommunityScreen = ({ navigation }: any) => {
 
             <Animated.View
                 style={[
-                    styles.fabContainer,
                     {
+                        position: 'absolute',
+                        right: 24,
                         transform: [{ scale: fabScaleAnim }],
                         bottom: insets.bottom + 90 // Lift above TabBar (60 + padding 20 + extra)
                     }
@@ -339,7 +355,7 @@ const CommunityScreen = ({ navigation }: any) => {
             >
                 <FAB
                     icon="plus"
-                    style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+                    style={{ borderRadius: 20, elevation: 4, backgroundColor: theme.colors.primary }}
                     color={theme.colors.onPrimary}
                     onPress={() => navigation.navigate('CreatePost')}
                     customSize={64}
@@ -348,110 +364,5 @@ const CommunityScreen = ({ navigation }: any) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    headerContainer: {
-        // paddingTop handled dynamically
-        paddingBottom: 8,
-        backgroundColor: 'transparent',
-        zIndex: 1,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        justifyContent: 'space-between',
-        height: 56,
-    },
-    searchContainer: {
-        height: 48,
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-    },
-    searchBar: {
-        flex: 1,
-        borderRadius: 24,
-        height: 44, // Slightly taller for better touch target
-        // No shadow here, handled by elevation=0 in props
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)', // Subtle border instead of shadow
-    },
-    searchInput: {
-        minHeight: 0,
-        alignSelf: 'center',
-    },
-    searchIconBtn: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        // No shadow here, handled by elevation=0
-    },
-    filterContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        alignItems: 'center',
-    },
-    filterChip: {
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 16,
-        marginRight: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        minWidth: 60,
-    },
-    listContent: {
-        paddingHorizontal: 16,
-        paddingBottom: 120, // Increased to clear floating tab bar
-        paddingTop: 8,
-    },
-    postCard: {
-        marginBottom: 16,
-        borderRadius: 20,
-        overflow: 'hidden',
-        elevation: 0, // Removed card elevation for cleaner look or set to 1
-        borderWidth: 1,
-        height: 130,
-        borderColor: 'rgba(0,0,0,0.05)', // Subtle border
-    },
-    postHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 12,
-    },
-    authorContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    tagChip: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
-    },
-    fabContainer: {
-        position: 'absolute',
-        right: 24,
-        // bottom handled dynamically
-    },
-    fab: {
-        borderRadius: 20,
-        elevation: 4,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    emptyContainer: {
-        paddingTop: 80,
-        alignItems: 'center',
-    },
-});
 
 export default CommunityScreen;

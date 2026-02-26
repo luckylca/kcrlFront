@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, InteractionManager } from 'react-native';
+import { View, ScrollView, TouchableOpacity, InteractionManager } from 'react-native';
 import { Appbar, Text, useTheme, IconButton, Surface, Divider, Portal, ActivityIndicator, Menu, Snackbar } from 'react-native-paper';
 import { useSettingStore } from '../store/useSettingStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -138,7 +138,7 @@ const DevicePathScreen = ({ navigation }: any) => {
     }, []);
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
             <Portal>
                 {loading && (
                     <ActivityIndicator
@@ -180,14 +180,14 @@ const DevicePathScreen = ({ navigation }: any) => {
                     当前锁定方式: {lockMethod === 'name' ? '设备名称' : '设备路径'} (点击右上角切换)
                 </Text>
 
-                <Surface style={[styles.listContainer, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                <Surface style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: theme.colors.surface }} elevation={1}>
                     {devices.map((item, index) => {
                         const value = lockMethod === 'name' ? item.name : item.path;
                         const isSelected = device.includes(value);
                         return (
                             <View key={item.path}>
                                 <TouchableOpacity
-                                    style={styles.itemRow}
+                                    style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4, paddingHorizontal: 8 }}
                                     onPress={() => toggleDevice(item)}
                                 >
                                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -246,21 +246,5 @@ const DevicePathScreen = ({ navigation }: any) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    listContainer: {
-        borderRadius: 16,
-        overflow: 'hidden',
-    },
-    itemRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-    },
-});
 
 export default DevicePathScreen;

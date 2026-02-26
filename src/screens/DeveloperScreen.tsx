@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from 'react';
 import {
     View,
-    StyleSheet,
     ScrollView,
     Animated,
     Linking,
@@ -91,8 +90,8 @@ const LinkCard = ({
                 onPress={() => Linking.openURL(url).catch(() => { })}
             >
                 <Animated.View style={{ transform: [{ scale }] }}>
-                    <Surface style={[styles.linkCard, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
-                        <View style={[styles.linkIconBox, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <Surface style={{ borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 10, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
+                        <View style={{ width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.primaryContainer }}>
                             <MaterialCommunityIcons name={icon} size={22} color={theme.colors.onPrimaryContainer} />
                         </View>
                         <View style={{ flex: 1, marginLeft: 14 }}>
@@ -130,13 +129,13 @@ const DeveloperCard = ({
 
     return (
         <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>
-            <Surface style={[styles.devCard, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
+            <Surface style={{ borderRadius: 24, overflow: 'hidden', marginBottom: 16, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
                 {/* Decorative accent bar */}
-                <View style={[styles.accentBar, { backgroundColor: dev.color }]} />
+                <View style={{ height: 4, width: '100%', backgroundColor: dev.color }} />
 
-                <View style={styles.devContent}>
+                <View style={{ padding: 20 }}>
                     {/* Avatar & Info */}
-                    <View style={styles.devHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Avatar.Text
                             size={52}
                             label={dev.avatar}
@@ -148,7 +147,7 @@ const DeveloperCard = ({
                                 {dev.name}
                             </Text>
                             <Surface
-                                style={[styles.roleBadge, { backgroundColor: dev.color + '18' }]}
+                                style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 4, backgroundColor: dev.color + '18' }}
                                 elevation={0}
                             >
                                 <Text variant="labelSmall" style={{ color: dev.color, fontWeight: '600' }}>
@@ -165,7 +164,7 @@ const DeveloperCard = ({
 
                     {/* GitHub Link */}
                     <TouchableOpacity
-                        style={[styles.githubBtn, { backgroundColor: theme.colors.surfaceVariant }]}
+                        style={{ marginTop: 16, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: theme.colors.surfaceVariant }}
                         onPress={() => Linking.openURL(dev.github).catch(() => { })}
                         activeOpacity={0.7}
                         onPressIn={() => Animated.spring(scale, { toValue: 0.95, useNativeDriver: true }).start()}
@@ -203,19 +202,19 @@ const DeveloperScreen = ({ navigation }: any) => {
     }, []);
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
             <Appbar.Header style={{ backgroundColor: 'transparent' }} statusBarHeight={insets.top}>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="开发者信息" titleStyle={{ fontWeight: 'bold' }} />
             </Appbar.Header>
 
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* ── Section: Team Header ── */}
                 <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }], marginBottom: 24 }}>
-                    <Surface style={[styles.teamHeader, { backgroundColor: theme.colors.primaryContainer }]} elevation={0}>
+                    <Surface style={{ borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.primaryContainer }} elevation={0}>
                         <MaterialCommunityIcons name="account-group" size={32} color={theme.colors.onPrimaryContainer} />
                         <View style={{ marginLeft: 16, flex: 1 }}>
                             <Text variant="titleLarge" style={{ fontWeight: 'bold', color: theme.colors.onPrimaryContainer }}>
@@ -229,7 +228,7 @@ const DeveloperScreen = ({ navigation }: any) => {
                 </Animated.View>
 
                 {/* ── Section: Developers ── */}
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+                <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 14, color: theme.colors.onBackground }}>
                     团队成员
                 </Text>
 
@@ -238,7 +237,7 @@ const DeveloperScreen = ({ navigation }: any) => {
                 ))}
 
                 {/* ── Section: Repositories ── */}
-                <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onBackground, marginTop: 28 }]}>
+                <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 14, color: theme.colors.onBackground, marginTop: 28 }}>
                     开源仓库
                 </Text>
 
@@ -259,67 +258,5 @@ const DeveloperScreen = ({ navigation }: any) => {
         </View>
     );
 };
-
-// ─── Styles ────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-    container: { flex: 1 },
-    scrollContent: {
-        paddingHorizontal: 20,
-        paddingBottom: 40,
-    },
-    teamHeader: {
-        borderRadius: 24,
-        padding: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    sectionTitle: {
-        fontWeight: 'bold',
-        marginBottom: 14,
-    },
-    devCard: {
-        borderRadius: 24,
-        overflow: 'hidden',
-        marginBottom: 16,
-    },
-    accentBar: {
-        height: 4,
-        width: '100%',
-    },
-    devContent: {
-        padding: 20,
-    },
-    devHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    roleBadge: {
-        alignSelf: 'flex-start',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
-        marginTop: 4,
-    },
-    githubBtn: {
-        marginTop: 16,
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    linkCard: {
-        borderRadius: 20,
-        padding: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    linkIconBox: {
-        width: 42,
-        height: 42,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-});
 
 export default DeveloperScreen;

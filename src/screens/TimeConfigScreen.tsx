@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, ScrollView, Dimensions } from 'react-native';
 import { Appbar, Text, useTheme, Surface } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
 import { useSettingStore } from '../store/useSettingStore';
@@ -46,15 +46,15 @@ const TimeConfigScreen = ({ navigation }: any) => {
         color: string = theme.colors.primary,
         description?: string
     ) => (
-        <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant }]} elevation={1}>
-            <View style={styles.headerRow}>
+        <Surface style={{ padding: 20, borderRadius: 20, marginBottom: 16, backgroundColor: theme.colors.surfaceVariant }} elevation={1}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>{title}</Text>
                 <Text variant="titleLarge" style={{ color: color, fontWeight: 'bold' }}>{value} ms</Text>
             </View>
             {description && (
                 <Text variant="bodySmall" style={{ opacity: 0.7, marginBottom: 12 }}>{description}</Text>
             )}
-            <View style={styles.sliderContainer}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text variant="labelSmall">{min}ms</Text>
                 <Slider
                     style={{ flex: 1, height: 40 }}
@@ -73,48 +73,48 @@ const TimeConfigScreen = ({ navigation }: any) => {
     );
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
             <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="时间配置" />
             </Appbar.Header>
 
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
 
                 {/* 1. Visual Timeline Card */}
-                <Surface style={[styles.card, { backgroundColor: theme.colors.surface, marginBottom: 24 }]} elevation={2}>
+                <Surface style={{ padding: 20, borderRadius: 20, marginBottom: 24, backgroundColor: theme.colors.surface }} elevation={2}>
                     <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 16 }}>按键响应时间轴</Text>
 
                     {/* Timeline Bar */}
-                    <View style={styles.timelineContainer}>
+                    <View style={{ height: 30, flexDirection: 'row', borderRadius: 15, overflow: 'hidden', backgroundColor: '#e0e0e0' }}>
                         {/* Click Segment */}
-                        <View style={[styles.timelineSegment, { width: `${clickWidth}%`, backgroundColor: theme.colors.primary }]}>
-                            {clickWidth > 15 && <Text style={styles.timelineLabel}>点击</Text>}
+                        <View style={{ height: '100%', justifyContent: 'center', alignItems: 'center', width: `${clickWidth}%`, backgroundColor: theme.colors.primary }}>
+                            {clickWidth > 15 && <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>点击</Text>}
                         </View>
                         {/* Short Press Segment */}
-                        <View style={[styles.timelineSegment, { width: `${shortWidth}%`, backgroundColor: theme.colors.secondary }]}>
-                            {shortWidth > 15 && <Text style={styles.timelineLabel}>短按</Text>}
+                        <View style={{ height: '100%', justifyContent: 'center', alignItems: 'center', width: `${shortWidth}%`, backgroundColor: theme.colors.secondary }}>
+                            {shortWidth > 15 && <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>短按</Text>}
                         </View>
                         {/* Long Press Segment */}
-                        <View style={[styles.timelineSegment, { width: `${longWidth}%`, backgroundColor: theme.colors.tertiary }]}>
-                            {longWidth > 15 && <Text style={styles.timelineLabel}>长按</Text>}
+                        <View style={{ height: '100%', justifyContent: 'center', alignItems: 'center', width: `${longWidth}%`, backgroundColor: theme.colors.tertiary }}>
+                            {longWidth > 15 && <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>长按</Text>}
                         </View>
                         {/* Hold/Max Segment */}
-                        <View style={[styles.timelineSegment, { width: `${holdWidth}%`, backgroundColor: theme.colors.error }]}>
-                            {holdWidth > 15 && <Text style={styles.timelineLabel}>...</Text>}
+                        <View style={{ height: '100%', justifyContent: 'center', alignItems: 'center', width: `${holdWidth}%`, backgroundColor: theme.colors.error }}>
+                            {holdWidth > 15 && <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>...</Text>}
                         </View>
                     </View>
 
                     {/* Timeline Legend/Markers */}
-                    <View style={styles.timelineMarkers}>
+                    <View style={{ height: 20, marginTop: 4, position: 'relative', width: '100%' }}>
                         <View style={{ position: 'absolute', left: `${getPercent(clickThreshold)}%` }}>
-                            <Text style={[styles.markerText, { color: theme.colors.onSurface }]}>{clickThreshold}</Text>
+                            <Text style={{ fontSize: 10, transform: [{ translateX: -10 }], color: theme.colors.onSurface }}>{clickThreshold}</Text>
                         </View>
                         <View style={{ position: 'absolute', left: `${getPercent(shortPressThreshold)}%` }}>
-                            <Text style={[styles.markerText, { color: theme.colors.onSurface }]}>{shortPressThreshold}</Text>
+                            <Text style={{ fontSize: 10, transform: [{ translateX: -10 }], color: theme.colors.onSurface }}>{shortPressThreshold}</Text>
                         </View>
                         <View style={{ position: 'absolute', left: `${getPercent(longPressThreshold)}%` }}>
-                            <Text style={[styles.markerText, { color: theme.colors.onSurface }]}>{longPressThreshold}</Text>
+                            <Text style={{ fontSize: 10, transform: [{ translateX: -10 }], color: theme.colors.onSurface }}>{longPressThreshold}</Text>
                         </View>
                     </View>
 
@@ -169,57 +169,5 @@ const TimeConfigScreen = ({ navigation }: any) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    content: {
-        padding: 16,
-    },
-    card: {
-        padding: 20,
-        borderRadius: 20,
-        marginBottom: 16,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    sliderContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    timelineContainer: {
-        height: 30,
-        flexDirection: 'row',
-        borderRadius: 15,
-        overflow: 'hidden',
-        backgroundColor: '#e0e0e0',
-    },
-    timelineSegment: {
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    timelineLabel: {
-        color: 'white',
-        fontSize: 10,
-        fontWeight: 'bold',
-    },
-    timelineMarkers: {
-        height: 20,
-        marginTop: 4,
-        position: 'relative',
-        width: '100%',
-    },
-    markerText: {
-        fontSize: 10,
-        transform: [{ translateX: -10 }], // Center the text on the tick
-    }
-});
 
 export default TimeConfigScreen;

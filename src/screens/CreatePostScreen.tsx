@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
-    StyleSheet,
     ScrollView,
     TextInput,
     Animated,
@@ -61,8 +60,12 @@ const TagChip = ({
             >
                 <Surface
                     style={[
-                        styles.tagChip,
                         {
+                            paddingHorizontal: 18,
+                            paddingVertical: 10,
+                            borderRadius: 20,
+                            justifyContent: 'center',
+                            alignItems: 'center',
                             backgroundColor: isSelected
                                 ? theme.colors.primary
                                 : theme.colors.surface,
@@ -142,7 +145,7 @@ const CreatePostScreen = ({ navigation }: any) => {
         launchImageLibrary(
             {
                 mediaType: 'photo',
-                selectionLimit: 9,
+                selectionLimit: 1,
                 quality: 0.8,
             },
             (response) => {
@@ -277,7 +280,7 @@ const CreatePostScreen = ({ navigation }: any) => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
             {/* ── Appbar ── */}
             <Appbar.Header
                 style={{ backgroundColor: 'transparent' }}
@@ -289,7 +292,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                     mode="contained"
                     onPress={handlePublish}
                     disabled={!canSubmit || isUploading}
-                    style={styles.publishBtn}
+                    style={{ borderRadius: 20, marginRight: 8 }}
                     labelStyle={{ fontWeight: 'bold', fontSize: 13 }}
                     contentStyle={{ height: 36 }}
                 >
@@ -302,38 +305,35 @@ const CreatePostScreen = ({ navigation }: any) => {
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scrollContent}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
                     keyboardShouldPersistTaps="handled"
                 >
                     {/* ── 发送 ID (作者) ── */}
-                    <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
+                    <Text variant="labelLarge" style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.onSurfaceVariant }}>
                         发送 ID
                     </Text>
-                    <Surface style={[styles.inputSurface, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
+                    <Surface style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
                         <TextInput
                             placeholder="输入你的昵称/ID..."
                             placeholderTextColor={theme.colors.onSurfaceVariant + '80'}
                             value={author}
                             onChangeText={setAuthor}
-                            style={[styles.titleInput, { color: theme.colors.onSurface }]}
+                            style={{ fontSize: 16, paddingHorizontal: 16, paddingVertical: 14, color: theme.colors.onSurface }}
                             maxLength={20}
                         />
                     </Surface>
-                    <Text variant="labelSmall" style={{ color: theme.colors.outline, marginTop: 4 }}>
-                        设置后将自动记住，下次发帖无需重新填写
-                    </Text>
 
                     {/* ── 标题 ── */}
-                    <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant, marginTop: 20 }]}>
+                    <Text variant="labelLarge" style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.onSurfaceVariant, marginTop: 20 }}>
                         标题
                     </Text>
-                    <Surface style={[styles.inputSurface, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
+                    <Surface style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
                         <TextInput
                             placeholder="输入帖子标题..."
                             placeholderTextColor={theme.colors.onSurfaceVariant + '80'}
                             value={title}
                             onChangeText={setTitle}
-                            style={[styles.titleInput, { color: theme.colors.onSurface }]}
+                            style={{ fontSize: 16, paddingHorizontal: 16, paddingVertical: 14, color: theme.colors.onSurface }}
                             maxLength={80}
                         />
                     </Surface>
@@ -342,13 +342,13 @@ const CreatePostScreen = ({ navigation }: any) => {
                     </Text>
 
                     {/* ── 分类 ── */}
-                    <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant, marginTop: 20 }]}>
+                    <Text variant="labelLarge" style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.onSurfaceVariant, marginTop: 20 }}>
                         分类
                     </Text>
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.tagsRow}
+                        contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingVertical: 4 }}
                     >
                         {tags.map(tag => (
                             <TagChip
@@ -362,45 +362,45 @@ const CreatePostScreen = ({ navigation }: any) => {
                     </ScrollView>
 
                     {/* ── 正文 ── */}
-                    <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant, marginTop: 20 }]}>
+                    <Text variant="labelLarge" style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.onSurfaceVariant, marginTop: 20 }}>
                         正文
                     </Text>
-                    <Surface style={[styles.inputSurface, styles.bodyInputSurface, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
+                    <Surface style={{ borderRadius: 16, overflow: 'hidden', minHeight: 200, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
                         <TextInput
                             placeholder="分享你的想法..."
                             placeholderTextColor={theme.colors.onSurfaceVariant + '80'}
                             value={body}
                             onChangeText={setBody}
-                            style={[styles.bodyInput, { color: theme.colors.onSurface }]}
+                            style={{ fontSize: 15, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, minHeight: 200, color: theme.colors.onSurface }}
                             multiline
                             textAlignVertical="top"
                         />
                     </Surface>
 
                     {/* ── 附件区域 ── */}
-                    <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant, marginTop: 24 }]}>
+                    <Text variant="labelLarge" style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.onSurfaceVariant, marginTop: 24 }}>
                         附件
                     </Text>
 
                     {/* ── 图片选择 ── */}
-                    <Surface style={[styles.attachSection, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
-                        <View style={styles.attachHeader}>
+                    <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                             <MaterialCommunityIcons name="image-multiple" size={20} color={theme.colors.primary} />
                             <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
                                 图片
                             </Text>
                             <Text variant="labelSmall" style={{ marginLeft: 8, color: theme.colors.outline }}>
-                                {selectedImages.length}/9
+                                {selectedImages.length}/1
                             </Text>
                         </View>
 
                         {selectedImages.length > 0 && (
-                            <View style={styles.imageGrid}>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                                 {selectedImages.map((img, index) => (
-                                    <View key={index} style={styles.imageThumb}>
-                                        <Image source={{ uri: img.uri }} style={styles.thumbImage} />
+                                    <View key={index} style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden' }}>
+                                        <Image source={{ uri: img.uri }} style={{ width: '100%', height: '100%' }} />
                                         <TouchableOpacity
-                                            style={[styles.removeBtn, { backgroundColor: theme.colors.error }]}
+                                            style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.error }}
                                             onPress={() => removeImage(index)}
                                             activeOpacity={0.7}
                                         >
@@ -412,7 +412,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                         )}
 
                         <TouchableOpacity
-                            style={[styles.addAttachBtn, { borderColor: theme.colors.outline + '60' }]}
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
                             onPress={handlePickImages}
                             activeOpacity={0.7}
                         >
@@ -424,8 +424,8 @@ const CreatePostScreen = ({ navigation }: any) => {
                     </Surface>
 
                     {/* ── 脚本选择 ── */}
-                    <Surface style={[styles.attachSection, { backgroundColor: theme.colors.elevation.level1, marginTop: 12 }]} elevation={0}>
-                        <View style={styles.attachHeader}>
+                    <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1, marginTop: 12 }} elevation={0}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                             <MaterialCommunityIcons name="script-text" size={20} color={theme.colors.tertiary} />
                             <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
                                 脚本
@@ -434,7 +434,7 @@ const CreatePostScreen = ({ navigation }: any) => {
 
                         {selectedScript && (
                             <Surface
-                                style={[styles.scriptChip, { backgroundColor: theme.colors.secondaryContainer }]}
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, marginBottom: 12, backgroundColor: theme.colors.secondaryContainer }}
                                 elevation={0}
                             >
                                 <MaterialCommunityIcons name="script-text-outline" size={18} color={theme.colors.onSecondaryContainer} />
@@ -455,7 +455,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                         )}
 
                         <TouchableOpacity
-                            style={[styles.addAttachBtn, { borderColor: theme.colors.outline + '60' }]}
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
                             onPress={() => {
                                 if (savedScripts.length === 0) {
                                     setSnackMessage('暂无已保存的脚本');
@@ -474,8 +474,8 @@ const CreatePostScreen = ({ navigation }: any) => {
                     </Surface>
 
                     {/* ── 扩展文件选择 ── */}
-                    <Surface style={[styles.attachSection, { backgroundColor: theme.colors.elevation.level1, marginTop: 12 }]} elevation={0}>
-                        <View style={styles.attachHeader}>
+                    <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1, marginTop: 12 }} elevation={0}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                             <MaterialCommunityIcons name="file-plus" size={20} color={theme.colors.secondary} />
                             <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
                                 扩展附件
@@ -487,7 +487,7 @@ const CreatePostScreen = ({ navigation }: any) => {
 
                         {selectedExtFile && (
                             <Surface
-                                style={[styles.scriptChip, { backgroundColor: theme.colors.secondaryContainer }]}
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, marginBottom: 12, backgroundColor: theme.colors.secondaryContainer }}
                                 elevation={0}
                             >
                                 <MaterialCommunityIcons name="file-outline" size={18} color={theme.colors.onSecondaryContainer} />
@@ -514,7 +514,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                         )}
 
                         <TouchableOpacity
-                            style={[styles.addAttachBtn, { borderColor: theme.colors.outline + '60' }]}
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
                             onPress={handlePickExtension}
                             activeOpacity={0.7}
                         >
@@ -530,8 +530,8 @@ const CreatePostScreen = ({ navigation }: any) => {
 
             {/* ── Loading Overlay ── */}
             {isUploading && (
-                <View style={styles.loadingOverlay}>
-                    <Surface style={[styles.loadingCard, { backgroundColor: theme.colors.surface }]} elevation={4}>
+                <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+                    <Surface style={{ paddingHorizontal: 40, paddingVertical: 32, borderRadius: 24, alignItems: 'center', backgroundColor: theme.colors.surface }} elevation={4}>
                         <ActivityIndicator size="large" color={theme.colors.primary} />
                         <Text variant="bodyMedium" style={{ marginTop: 12, color: theme.colors.onSurface }}>
                             正在发布...
@@ -554,7 +554,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                                 <TouchableOpacity
                                     key={script.id}
                                     style={[
-                                        styles.scriptListItem,
+                                        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 14 },
                                         selectedScript?.id === script.id && { backgroundColor: theme.colors.secondaryContainer + '40' },
                                     ]}
                                     onPress={() => handleSelectScript(script)}
@@ -594,126 +594,5 @@ const CreatePostScreen = ({ navigation }: any) => {
         </View>
     );
 };
-
-// ─── Styles ────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingHorizontal: 20,
-        paddingBottom: 40,
-    },
-    label: {
-        marginBottom: 8,
-        fontWeight: '600',
-    },
-    inputSurface: {
-        borderRadius: 16,
-        overflow: 'hidden',
-    },
-    titleInput: {
-        fontSize: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-    },
-    tagsRow: {
-        flexDirection: 'row',
-        gap: 8,
-        paddingVertical: 4,
-    },
-    tagChip: {
-        paddingHorizontal: 18,
-        paddingVertical: 10,
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    bodyInputSurface: {
-        minHeight: 200,
-    },
-    bodyInput: {
-        fontSize: 15,
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 14,
-        minHeight: 200,
-    },
-    publishBtn: {
-        borderRadius: 20,
-        marginRight: 8,
-    },
-    // ── Attachment Styles ──
-    attachSection: {
-        borderRadius: 16,
-        padding: 16,
-    },
-    attachHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    imageGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        marginBottom: 12,
-    },
-    imageThumb: {
-        width: 80,
-        height: 80,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-    thumbImage: {
-        width: '100%',
-        height: '100%',
-    },
-    removeBtn: {
-        position: 'absolute',
-        top: 4,
-        right: 4,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    addAttachBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        borderRadius: 12,
-        borderWidth: 1.5,
-        borderStyle: 'dashed',
-    },
-    scriptChip: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 14,
-        marginBottom: 12,
-    },
-    scriptListItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingVertical: 14,
-    },
-    loadingOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loadingCard: {
-        paddingHorizontal: 40,
-        paddingVertical: 32,
-        borderRadius: 24,
-        alignItems: 'center',
-    },
-});
 
 export default CreatePostScreen;

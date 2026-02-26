@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 /**
  * ActionCard:
  * 封装好的有动画的卡片组件
@@ -5,7 +6,7 @@
  */
 
 import React, { useRef } from 'react';
-import { View, Animated, StyleSheet } from 'react-native';
+import { View, Animated } from 'react-native';
 import { Text, Surface, TouchableRipple, useTheme } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -45,18 +46,18 @@ const ActionCard = ({
 
     return (
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-            <Surface style={[styles.actionCardSurface, { backgroundColor: containerColor }]} elevation={2}>
+            <Surface style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: containerColor }} elevation={2}>
                 <TouchableRipple
                     onPress={onPress}
                     onPressIn={onPressIn}
                     onPressOut={onPressOut}
-                    style={styles.actionCardRipple}
+                    style={{ padding: 24 }}
                     borderless={true}
                     rippleColor={theme.dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'} // Ensure ripple visual
                 >
-                    <View style={styles.actionCardContent}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <MaterialCommunityIcons name={icon} size={32} color={contentColor} />
-                        <View style={styles.actionCardTextContainer}>
+                        <View style={{ flex: 1, marginLeft: 16 }}>
                             <Text variant="titleMedium" style={{ color: contentColor, fontWeight: 'bold' }}>{title}</Text>
                             <Text variant="bodySmall" style={{ color: contentColor, opacity: 0.8 }}>{subtitle}</Text>
                         </View>
@@ -67,24 +68,5 @@ const ActionCard = ({
         </Animated.View>
     );
 };
-
-const styles = StyleSheet.create({
-    actionCardSurface: {
-        borderRadius: 24,
-        overflow: 'hidden', // Essential for ripple to stay inside
-    },
-    actionCardRipple: {
-        padding: 24, // Generous padding for touch target
-    },
-    actionCardContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    actionCardTextContainer: {
-        flex: 1,
-        marginLeft: 16,
-    }
-});
 
 export default ActionCard;

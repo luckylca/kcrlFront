@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Appbar, useTheme, Surface, Text, IconButton, Dialog, Portal, Button, Divider, TouchableRipple, ActivityIndicator } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSettingStore } from '../store/useSettingStore';
@@ -168,9 +168,9 @@ const KeyConfigScreen = ({ navigation }: any) => {
         if (!config) return null;
 
         return (
-            <Surface key={keyCode} style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
+            <Surface key={keyCode} style={{ borderRadius: 16, marginBottom: 16, backgroundColor: theme.colors.surface }} elevation={0}>
                 {/* Key Header */}
-                <View style={[styles.cardHeader, { backgroundColor: theme.colors.secondaryContainer }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: theme.colors.secondaryContainer }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                         <MaterialCommunityIcons name="usb" size={24} color={theme.colors.onSecondaryContainer} />
                         <View style={{ marginLeft: 12, flex: 1 }}>
@@ -191,14 +191,14 @@ const KeyConfigScreen = ({ navigation }: any) => {
                 </View>
 
                 {/* Triggers List */}
-                <View style={[styles.cardContent, { borderColor: theme.colors.outlineVariant, borderWidth: 1, borderTopWidth: 0, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }]}>
+                <View style={{ backgroundColor: '#fff', borderColor: theme.colors.outlineVariant, borderWidth: 1, borderTopWidth: 0, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
                     {TRIGGERS.map((trigger, index) => {
                         const scriptName = (config as any)[trigger.key] || '';
                         return (
                             <View key={trigger.key}>
                                 <TouchableOpacity
                                     onPress={() => openScriptSelector(keyCode, trigger.key)}
-                                    style={styles.triggerRow}
+                                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 16 }}
                                 >
                                     <View style={{ flex: 1 }}>
                                         <Text variant="bodyMedium" style={{ fontWeight: '500' }}>{trigger.label}</Text>
@@ -218,7 +218,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
             <Appbar.Header style={{ backgroundColor: theme.colors.background }}>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="按键配置" />
@@ -229,8 +229,8 @@ const KeyConfigScreen = ({ navigation }: any) => {
                 <Button
                     mode="outlined"
                     onPress={() => setIsAddKeyVisible(true)}
-                    style={styles.addKeyButton}
-                    contentStyle={styles.addKeyContent}
+                    style={{ marginBottom: 10, borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#79747E' }}
+                    contentStyle={{ height: 56, justifyContent: 'center' }}
                     icon={({ size, color }) => (
                         <MaterialCommunityIcons name="plus" size={24} color={theme.colors.primary} />
                     )}
@@ -245,7 +245,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
                 </Text>
 
                 {Object.keys(keyevent).length === 0 ? (
-                    <View style={styles.emptyState}>
+                    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }}>
                         <MaterialCommunityIcons name="playlist-remove" size={48} color={theme.colors.outline} />
                         <Text style={{ color: theme.colors.outline, marginTop: 16 }}>暂无设备配置，请点击上方添加</Text>
                     </View>
@@ -261,7 +261,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
                     <Dialog.ScrollArea>
                         <ScrollView contentContainerStyle={{ paddingVertical: 10 }}>
                             <TouchableOpacity
-                                style={styles.keyOption}
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8 }}
                                 onPress={() => { setIsAddKeyVisible(false); navigation.navigate('DevicePath'); }}
                             >
                                 <MaterialCommunityIcons name="cog" size={24} color={theme.colors.primary} />
@@ -289,7 +289,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
                             {device.map((path) => (
                                 <TouchableOpacity
                                     key={path}
-                                    style={styles.keyOption}
+                                    style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8 }}
                                     onPress={() => !keyevent[path] && startKeyScan(path)}
                                     disabled={!!keyevent[path]}
                                 >
@@ -319,7 +319,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
                     <Dialog.ScrollArea>
                         <ScrollView contentContainerStyle={{ paddingVertical: 10 }}>
                             <TouchableOpacity
-                                style={styles.scriptOption}
+                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8 }}
                                 onPress={() => handleSelectScript('')}
                             >
                                 <Text style={{ color: theme.colors.error }}>解除绑定 (None)</Text>
@@ -335,7 +335,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
                             {savedScripts.map((script) => (
                                 <TouchableOpacity
                                     key={script.id}
-                                    style={styles.scriptOption}
+                                    style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8 }}
                                     onPress={() => handleSelectScript(script.name)}
                                 >
                                     <View>
@@ -373,7 +373,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
                                     <Text variant="titleMedium" style={{ marginTop: 16, fontWeight: 'bold' }}>
                                         检测到按键
                                     </Text>
-                                    <View style={[styles.scanResultBox, { backgroundColor: theme.colors.primaryContainer, marginTop: 12 }]}>
+                                    <View style={{ padding: 16, borderRadius: 12, alignItems: 'center', backgroundColor: theme.colors.primaryContainer, marginTop: 12 }}>
                                         <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer }}>
                                             设备: {scanningDevice}
                                         </Text>
@@ -414,69 +414,5 @@ const KeyConfigScreen = ({ navigation }: any) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    card: {
-        borderRadius: 16,
-        marginBottom: 16,
-        backgroundColor: 'transparent',
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-    },
-    cardContent: {
-        backgroundColor: '#fff',
-    },
-    triggerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-    },
-    addKeyButton: {
-        marginBottom: 10,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderStyle: 'dashed',
-        borderColor: '#79747E', // Explicit color or use theme in component
-    },
-    addKeyContent: {
-        height: 56,
-        justifyContent: 'center',
-    },
-    emptyState: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 40,
-    },
-    scriptOption: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-    },
-    keyOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-    },
-    scanResultBox: {
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-    }
-});
 
 export default KeyConfigScreen;

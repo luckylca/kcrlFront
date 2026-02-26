@@ -5719,6 +5719,11 @@ react-is@^19.1.0, react-is@^19.2.0:
   resolved "https://registry.npmmirror.com/react-is/-/react-is-19.2.4.tgz#a080758243c572ccd4a63386537654298c99d135"
   integrity sha512-W+EWGn2v0ApPKgKKCy/7s7WHXkboGcsrXE+2joLyVxkbyVQfO3MUEaUQDHoSmb8TFFrSKYa9mw64WZHNHSDzYA==
 
+react-native-device-info@^15.0.2:
+  version "15.0.2"
+  resolved "https://registry.npmmirror.com/react-native-device-info/-/react-native-device-info-15.0.2.tgz#c7de1bb6baeb07e1bab70159ad540c5705cb8dc0"
+  integrity sha512-dd71eXG2l3Cwp66IvKNadMTB8fhU3PEjyVddI97sYan+D4bgIAUmgGDhbSOFvHcGavksb2U17kiQYaDiK2WK2g==
+
 react-native-draggable-flatlist@^4.0.3:
   version "4.0.3"
   resolved "https://registry.npmmirror.com/react-native-draggable-flatlist/-/react-native-draggable-flatlist-4.0.3.tgz#eb0bb3149059f48855b53aeb9728ab2eb361e4db"
@@ -5793,6 +5798,11 @@ react-native-send-intent@^1.3.0:
   resolved "https://registry.npmmirror.com/react-native-send-intent/-/react-native-send-intent-1.3.0.tgz#d8c7898827da1b8b10e25a645ce6802d1a0b440c"
   integrity sha512-ODTX7BHITFxdcAL0K2iHfa3qVYnqG8GPcv1NbLBNC1DyCaOSJiiGtVH6Kc5YBqzQ8+1pV9uN5nfQ5wyFgiq74g==
 
+react-native-share@^12.2.5:
+  version "12.2.5"
+  resolved "https://registry.npmmirror.com/react-native-share/-/react-native-share-12.2.5.tgz#a793f8d7c337b2e8ee123630676b69c531c5addd"
+  integrity sha512-2uwd/PdlUyvpsSBfL7OMiL4sD0Ja51wu5m62JSIXjrtlF+uSTUOGsMrE49ncIRYziqAfYUeI195WwhpvqXB0ww==
+
 react-native-tcp-socket@^6.4.1:
   version "6.4.1"
   resolved "https://registry.npmmirror.com/react-native-tcp-socket/-/react-native-tcp-socket-6.4.1.tgz#e33eec5648cbb226f79dda366bc294395a86d272"
@@ -5825,6 +5835,11 @@ react-native-worklets@^0.7.1:
     "@babel/preset-typescript" "7.27.1"
     convert-source-map "2.0.0"
     semver "7.7.3"
+
+react-native-zip-archive@^7.0.2:
+  version "7.0.2"
+  resolved "https://registry.npmmirror.com/react-native-zip-archive/-/react-native-zip-archive-7.0.2.tgz#f8c488b4f5ab1605bff1f366ac101fe0dce6fd1d"
+  integrity sha512-msCRJMcwH6NVZ2/zoC+1nvA0wlpYRnMxteQywS9nt4BzXn48tZpaVtE519QEZn0xe3ygvgsWx5cdPoE9Jx3bsg==
 
 react-native@*:
   version "0.84.0"

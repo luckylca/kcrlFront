@@ -1,5 +1,6 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import CustomTabBar, { TabRoute } from '../components/CustomTabBar'; // 刚才写的组件
 import { useTheme } from 'react-native-paper';
@@ -46,31 +47,31 @@ const MainScreen = ({ navigation, route }: any) => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             {/* 使用 PagerView 实现左右滑动 
                style 设置为透明，以便 App.tsx 的背景图能透出来
             */}
             < PagerView
                 ref={pagerRef}
-                style={styles.pagerView}
+                style={{ flex: 1, backgroundColor: 'transparent' }}
                 initialPage={0}
                 onPageSelected={onPageSelected}
                 overdrag={true} // Android 上的回弹效果
             >
                 {/* 第一页：Home */}
-                < View key="home" style={styles.pageWrapper} >
+                < View key="home" style={{ flex: 1, backgroundColor: 'transparent' }} >
                     {/* <HomeScreen /> */}
                     < HomeScreen navigation={navigation} route={route} name="首页内容" />
                 </View >
 
                 {/* 第二页：Community */}
-                < View key="community" style={styles.pageWrapper} >
+                < View key="community" style={{ flex: 1, backgroundColor: 'transparent' }} >
                     {/* <CommunityScreen /> */}
                     < CommunityScreen navigation={navigation} route={route} name="社区内容" />
                 </View >
 
                 {/* 第三页：Setting */}
-                < View key="setting" style={styles.pageWrapper} >
+                < View key="setting" style={{ flex: 1, backgroundColor: 'transparent' }} >
                     {/* <SettingScreen /> */}
                     < SettingsScreen navigation={navigation} route={route} name="设置内容" />
                 </View >
@@ -85,20 +86,5 @@ const MainScreen = ({ navigation, route }: any) => {
         </View >
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: 'transparent', // 关键：设为透明，透出 App.tsx 的背景图
-    },
-    pagerView: {
-        flex: 1,
-        backgroundColor: 'transparent', // 关键
-    },
-    pageWrapper: {
-        flex: 1,
-        backgroundColor: 'transparent', // 关键：如果你的子页面有不透明背景，这里会被覆盖
-    }
-});
 
 export default MainScreen;

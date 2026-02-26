@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import {
     View,
-    StyleSheet,
     ScrollView,
     ActivityIndicator,
     TouchableOpacity,
@@ -191,7 +190,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         if (isImageFile(filePath)) {
             const imageUrl = getFullUrl(filePath);
             return (
-                <View style={styles.attachmentSection}>
+                <View style={{ marginTop: 28 }}>
                     <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '600', marginBottom: 12 }}>
                         附件图片
                     </Text>
@@ -199,13 +198,13 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                         activeOpacity={0.8}
                         onPress={() => handleOpenInBrowser(filePath)}
                     >
-                        <Surface style={[styles.imageCard, { backgroundColor: theme.colors.elevation.level1 }]} elevation={1}>
+                        <Surface style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: theme.colors.elevation.level1 }} elevation={1}>
                             <Image
                                 source={{ uri: imageUrl }}
-                                style={styles.previewImage}
+                                style={{ width: SCREEN_WIDTH - 40, height: (SCREEN_WIDTH - 40) * 0.6, borderRadius: 16 }}
                                 resizeMode="contain"
                             />
-                            <View style={[styles.imageOverlay, { backgroundColor: theme.colors.surface + 'CC' }]}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, backgroundColor: theme.colors.surface + 'CC' }}>
                                 <MaterialCommunityIcons name="download" size={16} color={theme.colors.primary} />
                                 <Text variant="labelSmall" style={{ color: theme.colors.primary, marginLeft: 4, fontWeight: '600' }}>
                                     点击下载原图{fileSize > 0 ? ` (${formatFileSize(fileSize)})` : ''}
@@ -220,15 +219,15 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         // ── .sh file ──
         if (isShellScript(filePath)) {
             return (
-                <View style={styles.attachmentSection}>
+                <View style={{ marginTop: 28 }}>
                     <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '600', marginBottom: 12 }}>
                         脚本文件
                     </Text>
                     <Surface
-                        style={[styles.attachmentCard, { backgroundColor: theme.colors.elevation.level1 }]}
+                        style={{ flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 16, backgroundColor: theme.colors.elevation.level1 }}
                         elevation={1}
                     >
-                        <View style={[styles.attachmentIconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
+                        <View style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.tertiaryContainer }}>
                             <MaterialCommunityIcons name="script-text-outline" size={24} color={theme.colors.onTertiaryContainer} />
                         </View>
                         <View style={{ flex: 1, marginLeft: 14 }}>
@@ -262,7 +261,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
 
         // ── Other files ──
         return (
-            <View style={styles.attachmentSection}>
+            <View style={{ marginTop: 28 }}>
                 <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '600', marginBottom: 12 }}>
                     附件
                 </Text>
@@ -271,10 +270,10 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                     onPress={() => handleOpenInBrowser(filePath)}
                 >
                     <Surface
-                        style={[styles.attachmentCard, { backgroundColor: theme.colors.elevation.level1 }]}
+                        style={{ flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 16, backgroundColor: theme.colors.elevation.level1 }}
                         elevation={1}
                     >
-                        <View style={[styles.attachmentIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                        <View style={{ width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.primaryContainer }}>
                             <MaterialCommunityIcons name="file-download-outline" size={24} color={theme.colors.onPrimaryContainer} />
                         </View>
                         <Text
@@ -304,7 +303,7 @@ const PostDetailScreen = ({ navigation, route }: any) => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
             {/* ── Appbar ── */}
             <Appbar.Header style={{ backgroundColor: 'transparent' }} statusBarHeight={insets.top}>
                 <Appbar.BackAction onPress={handleBack} />
@@ -313,29 +312,29 @@ const PostDetailScreen = ({ navigation, route }: any) => {
             </Appbar.Header>
 
             {loading ? (
-                <View style={styles.loadingContainer}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             ) : (
-                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
                     {/* ── Author Info ── */}
-                    <Surface style={[styles.authorCard, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
-                        <View style={styles.authorRow}>
+                    <Surface style={{ borderRadius: 20, padding: 16, marginBottom: 20, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Avatar.Text size={40} label={(fullPost?.author || '?')[0]} style={{ backgroundColor: theme.colors.secondaryContainer }} color={theme.colors.onSecondaryContainer} />
                             <View style={{ marginLeft: 12, flex: 1 }}>
                                 <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.onSurface }}>{fullPost?.author ?? '匿名用户'}</Text>
                             </View>
-                            <Surface style={[styles.tagBadge, { backgroundColor: theme.colors.tertiaryContainer }]} elevation={0}>
+                            <Surface style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12, backgroundColor: theme.colors.tertiaryContainer }} elevation={0}>
                                 <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{fullPost?.category ?? '其他'}</Text>
                             </Surface>
                         </View>
                     </Surface>
 
                     {/* ── Title ── */}
-                    <Text variant="headlineSmall" style={[styles.title, { color: theme.colors.onBackground }]}>{fullPost?.title ?? '无标题'}</Text>
+                    <Text variant="headlineSmall" style={{ fontWeight: 'bold', marginBottom: 16, color: theme.colors.onBackground }}>{fullPost?.title ?? '无标题'}</Text>
 
                     {/* ── Body Content ── */}
-                    <Text variant="bodyLarge" style={[styles.body, { color: theme.colors.onSurfaceVariant }]}>
+                    <Text variant="bodyLarge" style={{ lineHeight: 24, color: theme.colors.onSurfaceVariant }}>
                         {fullPost?.content ?? '暂无内容'}
                     </Text>
 
@@ -356,50 +355,5 @@ const PostDetailScreen = ({ navigation, route }: any) => {
         </View>
     );
 };
-
-// ─── Styles ────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-    container: { flex: 1 },
-    scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
-    authorCard: { borderRadius: 20, padding: 16, marginBottom: 20 },
-    authorRow: { flexDirection: 'row', alignItems: 'center' },
-    tagBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12 },
-    title: { fontWeight: 'bold', marginBottom: 16 },
-    body: { lineHeight: 24 },
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    // ── Attachment Styles ──
-    attachmentSection: {
-        marginTop: 28,
-    },
-    attachmentCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 14,
-        borderRadius: 16,
-    },
-    attachmentIconContainer: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    // ── Image preview ──
-    imageCard: {
-        borderRadius: 16,
-        overflow: 'hidden',
-    },
-    previewImage: {
-        width: SCREEN_WIDTH - 40,
-        height: (SCREEN_WIDTH - 40) * 0.6,
-        borderRadius: 16,
-    },
-    imageOverlay: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 8,
-    },
-});
 
 export default PostDetailScreen;

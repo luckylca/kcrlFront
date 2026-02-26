@@ -1,11 +1,15 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useRef, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, StyleSheet, ScrollView, Animated, Dimensions, Easing } from 'react-native';
+import { View, ScrollView, Animated, Dimensions, Easing } from 'react-native';
 import { Text, Switch, Surface, TouchableRipple, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSettingStore } from '../store/useSettingStore';
+import RNFS from 'react-native-fs';
+import { zip } from 'react-native-zip-archive';
+import Share from 'react-native-share';
+
 // ------------------------------------------------------------------
 // Types
 // ------------------------------------------------------------------
@@ -113,8 +117,9 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
         >
             <Surface
                 style={[
-                    styles.card,
                     {
+                        overflow: 'hidden',
+                        marginHorizontal: 4,
                         backgroundColor: theme.colors.surface,
                         opacity: 0.9,
                         borderRadius: 24, // Material You Large Radius
@@ -127,17 +132,17 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
                     onPressIn={handlePressIn}
                     onPressOut={handlePressOut}
                     rippleColor={theme.colors.primary + '20'} // 20% opacity primary
-                    style={styles.touchable}
+                    style={{ padding: 16 }}
                     borderless={true}
                 >
-                    <View style={styles.cardContent}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         {/* Icon Box */}
-                        <View style={[styles.iconBox, { backgroundColor: theme.colors.secondaryContainer }]}>
+                        <View style={{ width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16, backgroundColor: theme.colors.secondaryContainer }}>
                             <MaterialCommunityIcons name={item.icon} size={24} color={theme.colors.primary} />
                         </View>
 
                         {/* Text Content */}
-                        <View style={styles.textContainer}>
+                        <View style={{ flex: 1, justifyContent: 'center' }}>
                             <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
                                 {item.title}
                             </Text>
@@ -149,7 +154,7 @@ const SettingsCard = ({ item, index, theme, navigation }: { item: SettingsItemTy
                         </View>
 
                         {/* Action Component */}
-                        <View style={styles.actionContainer}>
+                        <View style={{ justifyContent: 'center', alignItems: 'center', marginLeft: 8 }}>
                             {item.type === 'route' && (
                                 <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
                             )}
@@ -225,13 +230,12 @@ const SettingsScreen = ({ navigation }: any) => {
         },
         {
             id: 'send_logs',
-            title: '发送日志',
-            subtitle: '上传日志文件至服务器',
+            title: '导出日志',
+            subtitle: '导出日志，发送给开发者分析',
             icon: 'cloud-upload-outline',
             type: 'button',
             onPress: () => {
-                console.log('Sending logs...');
-                // Add actual log sending logic here
+                zipAndShareExternalDir();
             },
         },
         {
@@ -243,19 +247,40 @@ const SettingsScreen = ({ navigation }: any) => {
             route: 'About',
         },
     ];
+    const zipAndShareExternalDir = async () => {
+        try {
 
+            const sourceDir = RNFS.ExternalDirectoryPath; // /storage/emulated/0/Android/data/<pkg>/files
+
+            const exists = await RNFS.exists(sourceDir);
+
+            const outDir = RNFS.CachesDirectoryPath;
+            const zipPath = `${outDir}/external_files_backup_${Date.now()}.zip`;
+
+            const resultZipPath = await zip(sourceDir, zipPath);
+
+            const shareUrl = `file://${resultZipPath}`;
+
+            await Share.open({
+                url: shareUrl,
+                type: 'application/zip',
+                filename: `external_files_backup_${Date.now()}.zip`,
+                failOnCancel: false,
+            });
+        } catch (e: any) {
+            throw e;
+        }
+    }
     return (
-        <View style={[styles.container, { backgroundColor: 'transparent' }]}>
-            {/* Header / AppBar */}
-            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-                <Text variant="displaySmall" style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingBottom: 20, backgroundColor: 'transparent', paddingTop: insets.top + 10 }}>
+                <Text variant="displaySmall" style={{ fontWeight: 'bold', fontFamily: 'Roboto', color: theme.colors.onSurface }}>
                     设置
                 </Text>
             </View>
 
-            {/* Scrollable Content */}
             <ScrollView
-                contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 20 }]}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: insets.bottom + 20 }}
                 showsVerticalScrollIndicator={false}
             >
                 {settingsItems.map((item, index) => (
@@ -271,55 +296,5 @@ const SettingsScreen = ({ navigation }: any) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingBottom: 20,
-        backgroundColor: 'transparent',
-    },
-    headerTitle: {
-        fontWeight: 'bold',
-        fontFamily: 'Roboto',
-    },
-    content: {
-        paddingHorizontal: 16,
-        paddingTop: 8,
-    },
-    card: {
-        overflow: 'hidden',
-        marginHorizontal: 4, // Space for shadow
-    },
-    touchable: {
-        padding: 16,
-    },
-    cardContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    iconBox: {
-        width: 48,
-        height: 48,
-        borderRadius: 16, // Medium Rounding
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    textContainer: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    actionContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 8,
-    },
-});
 
 export default SettingsScreen;

@@ -271,6 +271,28 @@ class ApiService {
       return null;
     }
   }
+
+  async getUpdataInfo(): Promise<{ version: number, version_name: string, updates: string, download: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/vapi/app.json`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching update info:', error);
+      return {
+        version: 0,
+        version_name: '0.0.0',
+        updates: '获取更新信息失败',
+        download: '获取更新信息失败',
+      };
+    }
+  }
+
 }
 
 export default new ApiService();

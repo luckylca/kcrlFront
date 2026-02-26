@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Appbar, Text, useTheme, Switch, Button, Surface, TextInput, Slider as PaperSlider, IconButton } from 'react-native-paper'; // Note: Paper doesn't export Slider, using community one below
 import Slider from '@react-native-community/slider';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -41,17 +41,17 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <Appbar.Header style={{ backgroundColor: 'transparent' }}>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="主题设置" />
             </Appbar.Header>
 
-            <ScrollView contentContainerStyle={styles.content}>
+            <ScrollView contentContainerStyle={{ padding: 16 }}>
 
-                {/* 1. Dark Mode Toggle */}
-                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, opacity: 0.9 }]} elevation={1}>
-                    <View style={styles.row}>
+                {/* 1. 黑夜白天模式切换 */}
+                <Surface style={{ padding: 16, borderRadius: 16, backgroundColor: theme.colors.surfaceVariant, opacity: 0.9 }} elevation={1}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View>
                             <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>黑夜模式</Text>
                             <Text variant="bodySmall" style={{ opacity: 0.7 }}>切换应用为深色外观</Text>
@@ -60,31 +60,30 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
                     </View>
                 </Surface>
 
-                {/* 2. Theme Color Picker */}
-                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, marginTop: 16, opacity: 0.9 }]} elevation={1}>
+                {/* 主题颜色 */}
+                <Surface style={{ padding: 16, borderRadius: 16, backgroundColor: theme.colors.surfaceVariant, marginTop: 16, opacity: 0.9 }} elevation={1}>
                     <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 16 }}>主题颜色</Text>
-                    <View style={styles.colorRow}>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
                         {COLOR_PRESETS.map((color) => (
                             <TouchableOpacity
                                 key={color}
                                 style={[
-                                    styles.colorCircle,
-                                    { backgroundColor: color },
-                                    themeColor === color && styles.selectedColorCircle
+                                    { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', elevation: 2, backgroundColor: color },
+                                    themeColor === color && { borderWidth: 3, borderColor: 'white' }
                                 ]}
                                 onPress={() => setThemeColor(color)}
                             >
                                 {themeColor === color && (
-                                    <View style={styles.checkMark} />
+                                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: 'white' }} />
                                 )}
                             </TouchableOpacity>
                         ))}
                     </View>
                 </Surface>
 
-                {/* 3. Global Background Image */}
-                <Surface style={[styles.card, { backgroundColor: theme.colors.surfaceVariant, marginTop: 16, opacity: 0.9 }]} elevation={1}>
-                    <View style={styles.row}>
+                {/* 全局背景 */}
+                <Surface style={{ padding: 16, borderRadius: 16, backgroundColor: theme.colors.surfaceVariant, marginTop: 16, opacity: 0.9 }} elevation={1}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>全局背景图</Text>
                         {backgroundImage && (
                             <Button mode="text" onPress={() => setBackgroundImage(null)} textColor={theme.colors.error}>
@@ -97,14 +96,14 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
                         设置自定义图片作为应用背景
                     </Text>
 
-                    {/* Image Preview */}
+                    {/* 图片预览 */}
                     {backgroundImage ? (
-                        <View style={styles.previewContainer}>
-                            <Image source={{ uri: backgroundImage }} style={styles.previewImage} />
+                        <View style={{ height: 150, borderRadius: 12, overflow: 'hidden', marginBottom: 12, backgroundColor: '#eee' }}>
+                            <Image source={{ uri: backgroundImage }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
                         </View>
                     ) : null}
 
-                    <View style={styles.actionRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
                         <TextInput
                             mode="outlined"
                             label="图片 URL"
@@ -118,11 +117,11 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
                         </Button>
                     </View>
 
-                    {/* 4. Transparency Slider */}
+                    {/* 透明度设置 */}
                     <Text variant="titleSmall" style={{ marginTop: 24, marginBottom: 8 }}>
                         背景不透明度: {(backgroundOpacity * 100).toFixed(0)}%
                     </Text>
-                    <View style={styles.sliderContainer}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Text variant="bodySmall">透明</Text>
                         <Slider
                             style={{ flex: 1, height: 40 }}
@@ -137,75 +136,10 @@ const ThemeSettingsScreen = ({ navigation }: any) => {
                         />
                         <Text variant="bodySmall">实体</Text>
                     </View>
-
                 </Surface>
-
             </ScrollView>
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    content: {
-        padding: 16,
-    },
-    card: {
-        padding: 16,
-        borderRadius: 16,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    colorRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
-    colorCircle: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 2,
-    },
-    selectedColorCircle: {
-        borderWidth: 3,
-        borderColor: 'white', // Needs contrast check, using white for now as it's common for selection rings
-    },
-    checkMark: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        backgroundColor: 'white',
-    },
-    actionRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 12,
-    },
-    previewContainer: {
-        height: 150,
-        borderRadius: 12,
-        overflow: 'hidden',
-        marginBottom: 12,
-        backgroundColor: '#eee',
-    },
-    previewImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
-    },
-    sliderContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    }
-});
 
 export default ThemeSettingsScreen;

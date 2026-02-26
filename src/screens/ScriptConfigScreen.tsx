@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Appbar, Text, useTheme, Surface, IconButton, TextInput, Button, Divider, Portal, Dialog, Paragraph } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
@@ -185,8 +185,6 @@ const ScriptConfigScreen = () => {
     }, {} as Record<string, boolean>);
     const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>(initialCollapsedState);
 
-    // Dialog State
-    // Generic Confirmation Dialog
     const [confirmDialog, setConfirmDialog] = useState<{
         visible: boolean;
         title: string;
@@ -194,25 +192,23 @@ const ScriptConfigScreen = () => {
         onConfirm: () => void;
     }>({ visible: false, title: '', content: '', onConfirm: () => { } });
 
-    // Save Dialog
+
     const [isSaveDialogVisible, setIsSaveDialogVisible] = useState(false);
     const [saveName, setSaveName] = useState('');
     const [saveError, setSaveError] = useState('');
 
-    // Rename Dialog
     const [isRenameDialogVisible, setIsRenameDialogVisible] = useState(false);
     const [renameId, setRenameId] = useState('');
     const [renameOldName, setRenameOldName] = useState('');
     const [renameName, setRenameName] = useState('');
     const [renameError, setRenameError] = useState('');
 
-    // Initialize local state from store
+    // 从store初始化本地状态
     useEffect(() => {
         setLocalScripts(savedScripts);
         setSaveName(currentScriptName);
     }, [savedScripts, currentScriptName]);
 
-    // Format new item
     const handleAddTemplate = (template: TemplateItem) => {
         const newStep: ScriptStep = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
@@ -223,7 +219,7 @@ const ScriptConfigScreen = () => {
         setLocalScripts([...localScripts, newStep]);
     };
 
-    // Toggle Category
+    // 展开
     const toggleCategory = (title: string) => {
         setCollapsedCategories(prev => ({
             ...prev,
@@ -254,25 +250,12 @@ const ScriptConfigScreen = () => {
             });
             return;
         }
-        setSaveName(currentScriptName || ''); // Pre-fill with current name if existing
-        setSaveError(''); // Reset error
+        setSaveName(currentScriptName || '');
+        setSaveError('');
         setIsSaveDialogVisible(true);
     };
 
-    const exportScript = async () => {
-        const shellScript = generateShellScript(localScripts, saveName);
-        const fileName = `${saveName || 'script'}.sh`;
-        const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-        await RNFS.writeFile(filePath, shellScript, 'utf8')
-            .then(() => {
-                console.log('Script exported successfully:', filePath);
-            })
-            .catch((error) => {
-                console.error('Error exporting script:', error);
-            });
-    };
-
-    // Confirm Save
+    // 确认保存
     const handleConfirmSave = async () => {
         if (!saveName.trim()) {
             setSaveError('请输入脚本名称');
@@ -284,7 +267,7 @@ const ScriptConfigScreen = () => {
         setIsSaveDialogVisible(false);
     };
 
-    // Handle Load Script
+    // 加载脚本
     const handleLoadScript = (id: string) => {
         setConfirmDialog({
             visible: true,
@@ -297,7 +280,7 @@ const ScriptConfigScreen = () => {
         });
     };
 
-    // Handle Delete Saved Script
+    // 删除脚本
     const handleDeleteSavedScript = (id: string, name: string) => {
         setConfirmDialog({
             visible: true,
@@ -310,7 +293,7 @@ const ScriptConfigScreen = () => {
         });
     };
 
-    // Handle Clear Current
+    // 清空编辑区
     const handleClear = () => {
         setConfirmDialog({
             visible: true,
@@ -325,7 +308,6 @@ const ScriptConfigScreen = () => {
         });
     };
 
-    // Handle Rename Script (long press)
     const handleRenameScript = (id: string, oldName: string) => {
         setRenameId(id);
         setRenameOldName(oldName);
@@ -344,16 +326,11 @@ const ScriptConfigScreen = () => {
             setIsRenameDialogVisible(false);
             return;
         }
-        // Check duplicate name
         if (libraryScripts.some(s => s.name === newName && s.id !== renameId)) {
             setRenameError('该名称已存在');
             return;
         }
-
-        // 1. Rename in script store (also triggers .sh file re-sync)
         renameScript(renameId, newName);
-
-        // 2. Sync keyevent config: values are stored with .sh suffix (e.g. "scriptName.sh")
         const oldFileName = `${renameOldName}.sh`;
         const newFileName = `${newName}.sh`;
         const updatedKeyevent = { ...keyevent };
@@ -426,7 +403,7 @@ const ScriptConfigScreen = () => {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
                 {/* Header */}
                 <Appbar.Header>
                     <Appbar.BackAction onPress={() => navigation.goBack()} />
@@ -435,19 +412,19 @@ const ScriptConfigScreen = () => {
                     <Appbar.Action icon="content-save-outline" onPress={handleOpenSaveDialog} />
                 </Appbar.Header>
 
-                <View style={styles.splitView}>
+                <View style={{ flex: 1, flexDirection: 'row' }}>
                     {/* Sidebar: Sidebar (30%) */}
-                    <View style={[styles.sidebar, { borderRightColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}>
+                    <View style={{ width: '30%', borderRightWidth: 1, padding: 8, borderRightColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }}>
                         {/* Tabs for Sidebar */}
-                        <View style={styles.sidebarTabs}>
+                        <View style={{ flexDirection: 'row', marginBottom: 16 }}>
                             <TouchableOpacity
-                                style={[styles.sidebarTab, activeTab === 'templates' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 }]}
+                                style={[{ flex: 1, alignItems: 'center', paddingVertical: 8 }, activeTab === 'templates' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 }]}
                                 onPress={() => setActiveTab('templates')}
                             >
                                 <Text style={{ color: activeTab === 'templates' ? theme.colors.primary : theme.colors.onSurfaceVariant }}>组件库</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.sidebarTab, activeTab === 'saved' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 }]}
+                                style={[{ flex: 1, alignItems: 'center', paddingVertical: 8 }, activeTab === 'saved' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 }]}
                                 onPress={() => setActiveTab('saved')}
                             >
                                 <Text style={{ color: activeTab === 'saved' ? theme.colors.primary : theme.colors.onSurfaceVariant }}>已保存</Text>
@@ -460,7 +437,7 @@ const ScriptConfigScreen = () => {
                                 TEMPLATE_LIBRARY.map((category, index) => {
                                     const isCollapsed = collapsedCategories[category.title];
                                     return (
-                                        <View key={index} style={styles.categoryBlock}>
+                                        <View key={index} style={{ marginBottom: 8 }}>
                                             <TouchableOpacity
                                                 onPress={() => toggleCategory(category.title)}
                                                 style={{ flexDirection: 'row', alignItems: 'center', padding: 8, marginBottom: 4 }}
@@ -478,7 +455,7 @@ const ScriptConfigScreen = () => {
                                             {!isCollapsed && category.data.map((template, tIndex) => (
                                                 <TouchableOpacity
                                                     key={tIndex}
-                                                    style={[styles.templateItem, { backgroundColor: theme.colors.surfaceVariant, marginLeft: 1 }]}
+                                                    style={{ flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, marginBottom: 8, elevation: 0, backgroundColor: theme.colors.surfaceVariant, marginLeft: 1 }}
                                                     onPress={() => handleAddTemplate(template)}
                                                     activeOpacity={0.7}
                                                 >
@@ -494,7 +471,6 @@ const ScriptConfigScreen = () => {
                                     );
                                 })
                             ) : (
-                                // Saved Scripts List
                                 <View>
                                     {libraryScripts.length === 0 ? (
                                         <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.onSurfaceVariant }}>暂无保存的脚本</Text>
@@ -503,7 +479,7 @@ const ScriptConfigScreen = () => {
                                             <TouchableOpacity
                                                 key={script.id}
                                                 style={[
-                                                    styles.savedScriptItem,
+                                                    { flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, marginBottom: 8 },
                                                     {
                                                         backgroundColor: theme.colors.surfaceVariant,
                                                         borderColor: script.name === currentScriptName ? theme.colors.primary : 'transparent',
@@ -534,9 +510,9 @@ const ScriptConfigScreen = () => {
                     </View>
 
                     {/* Main Area: Script Editor (70%) */}
-                    <View style={styles.mainArea}>
+                    <View style={{ flex: 1, backgroundColor: 'transparent', overflow: 'hidden' }}>
                         {localScripts.length === 0 ? (
-                            <View style={styles.emptyState}>
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', opacity: 0.7 }}>
                                 <MaterialCommunityIcons name="playlist-edit" size={64} color={theme.colors.surfaceVariant} />
                                 <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 16 }}>
                                     从左侧添加组件或加载脚本
@@ -615,58 +591,5 @@ const ScriptConfigScreen = () => {
         </GestureHandlerRootView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    splitView: {
-        flex: 1,
-        flexDirection: 'row',
-    },
-    sidebar: {
-        width: '30%',
-        borderRightWidth: 1,
-        padding: 8,
-    },
-    sidebarTabs: {
-        flexDirection: 'row',
-        marginBottom: 16,
-    },
-    sidebarTab: {
-        flex: 1,
-        alignItems: 'center',
-        paddingVertical: 8,
-    },
-    categoryBlock: {
-        marginBottom: 8,
-    },
-    templateItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 8,
-        elevation: 0,
-    },
-    savedScriptItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 8,
-    },
-    mainArea: {
-        flex: 1,
-        backgroundColor: 'transparent',
-        overflow: 'hidden',
-    },
-    emptyState: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        opacity: 0.7,
-    },
-});
 
 export default ScriptConfigScreen;
