@@ -280,7 +280,7 @@ const SettingsScreen = ({ navigation }: any) => {
             </View>
 
             <ScrollView
-                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: insets.bottom + 20 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: insets.bottom + 120 }}
                 showsVerticalScrollIndicator={false}
             >
                 {settingsItems.map((item, index) => (

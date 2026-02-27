@@ -313,6 +313,25 @@ const KeyConfigScreen = ({ navigation }: any) => {
                         <ScrollView contentContainerStyle={{ paddingVertical: 10 }}>
                             <TouchableOpacity
                                 style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8 }}
+                                onPress={() => { setIsScriptDialogVisible(false); navigation.navigate('ScriptConfig'); }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name="plus" size={24} color={theme.colors.primary} />
+                                    <View style={{ marginLeft: 16, flex: 1 }}>
+                                        <Text variant="bodyLarge" style={{ color: theme.colors.primary }}>
+                                            添加脚本
+                                        </Text>
+                                        <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                                            创建或编辑脚本
+                                        </Text>
+                                    </View>
+                                </View>
+                                <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.outline} />
+                            </TouchableOpacity>
+                            <Divider style={{ marginVertical: 8 }} />
+
+                            <TouchableOpacity
+                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 8 }}
                                 onPress={() => handleSelectScript('')}
                             >
                                 <Text style={{ color: theme.colors.error }}>解除绑定 (None)</Text>

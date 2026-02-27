@@ -31,6 +31,8 @@ import RNFS from 'react-native-fs';
 import { useScriptStore, SavedScript } from '../store/useScriptStore';
 import OLAPI from '../api/OLAPI';
 
+// 创建一个简单的提示输入组件
+
 // ─── Animated Tag Chip ─────────────────────────────────────────────
 const TagChip = ({
     label,
@@ -117,6 +119,11 @@ const CreatePostScreen = ({ navigation }: any) => {
       type: string;
       size?: number;
     } | null>(null);
+    
+    // 新增：正文中的图片和链接
+    const [bodyImages, setBodyImages] = useState<Asset[]>([]);
+    const [bodyLinks, setBodyLinks] = useState<string[]>([]);
+    const [showInsertTools, setShowInsertTools] = useState(false);
 
     const savedScripts = useScriptStore(state => state.savedScripts);
 
@@ -139,6 +146,12 @@ const CreatePostScreen = ({ navigation }: any) => {
     }, []);
 
     const canSubmit = title.trim().length > 0 && body.trim().length > 0 && selectedTag.length > 0 && author.trim().length > 0;
+
+    // ── Check if attachments are allowed for selected category ──
+    const canAddImages = selectedTag === '主题';
+    const canAddScripts = selectedTag === '脚本';
+    const canAddExtensions = selectedTag === '扩展'; // Only "扩展" category can add extensions
+    const canAddAnyAttachment = selectedTag === '帖子'; // No attachments allowed
 
     // ── Image Picker ──
     const handlePickImages = () => {
@@ -199,6 +212,65 @@ const CreatePostScreen = ({ navigation }: any) => {
 
     const removeExtension = () => {
         setSelectedExtFile(null);
+    };
+
+    // 新增：处理正文中的图片和链接
+    const [insertImageDialogVisible, setInsertImageDialogVisible] = useState(false);
+    const [insertLinkDialogVisible, setInsertLinkDialogVisible] = useState(false);
+    const [imageInputValue, setImageInputValue] = useState('');
+    const [linkInputValue, setLinkInputValue] = useState('');
+
+    const handleInsertImage = () => {
+        setImageInputValue('');
+        setInsertImageDialogVisible(true);
+    };
+
+    const handleInsertLink = () => {
+        setLinkInputValue('');
+        setInsertLinkDialogVisible(true);
+    };
+
+    const confirmInsertImage = () => {
+        if (imageInputValue.trim()) {
+            // 生成图片标记
+            const imageIndex = bodyImages.length;
+            const imageTag = `[IMG=${imageInputValue.trim()}]`;
+            setBody(prevBody => prevBody + '\n' + imageTag + '\n');
+            
+            // 添加到图片列表（仅用于显示，不上传）
+            setBodyImages(prev => [...prev, { uri: imageInputValue.trim(), fileName: `image_${imageIndex}`, type: 'image/jpeg' } as Asset]);
+        }
+        setInsertImageDialogVisible(false);
+    };
+
+    const confirmInsertLink = () => {
+        if (linkInputValue.trim()) {
+            const newLinks = [...bodyLinks, linkInputValue.trim()];
+            setBodyLinks(newLinks);
+            
+            // 在正文中插入链接标记
+            const linkTag = `[URL=${linkInputValue.trim()}]${linkInputValue.trim()}[/URL]`;
+            setBody(prevBody => prevBody + '\n' + linkTag + '\n');
+        }
+        setInsertLinkDialogVisible(false);
+    };
+
+    const removeBodyImage = (index: number) => {
+        const newImages = bodyImages.filter((_, i) => i !== index);
+        setBodyImages(newImages);
+        
+        // 从正文中移除对应的图片标记
+        const imageTag = `[IMG=${bodyImages[index].uri}]`;
+        setBody(prevBody => prevBody.replace(imageTag, ''));
+    };
+
+    const removeBodyLink = (index: number) => {
+        const newLinks = bodyLinks.filter((_, i) => i !== index);
+        setBodyLinks(newLinks);
+        
+        // 从正文中移除对应的链接标记
+        const linkTag = `[URL=${bodyLinks[index]}]${bodyLinks[index]}[/URL]`;
+        setBody(prevBody => prevBody.replace(linkTag, ''));
     };
 
     // ── Publish ──
@@ -375,155 +447,302 @@ const CreatePostScreen = ({ navigation }: any) => {
                             multiline
                             textAlignVertical="top"
                         />
-                    </Surface>
-
-                    {/* ── 附件区域 ── */}
-                    <Text variant="labelLarge" style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.onSurfaceVariant, marginTop: 24 }}>
-                        附件
-                    </Text>
-
-                    {/* ── 图片选择 ── */}
-                    <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                            <MaterialCommunityIcons name="image-multiple" size={20} color={theme.colors.primary} />
-                            <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
-                                图片
-                            </Text>
-                            <Text variant="labelSmall" style={{ marginLeft: 8, color: theme.colors.outline }}>
-                                {selectedImages.length}/1
-                            </Text>
+                        
+                        {/* 正文工具栏 */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: theme.colors.outline + '30' }}>
+                            <TouchableOpacity
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: theme.colors.primaryContainer }}
+                                onPress={() => setShowInsertTools(!showInsertTools)}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialCommunityIcons name="plus" size={18} color={theme.colors.primary} />
+                                <Text variant="labelSmall" style={{ color: theme.colors.primary, marginLeft: 4 }}>
+                                    插入
+                                </Text>
+                            </TouchableOpacity>
+                            
+                            {showInsertTools && (
+                                <View style={{ flexDirection: 'row', gap: 8 }}>
+                                    <TouchableOpacity
+                                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: theme.colors.secondaryContainer }}
+                                        onPress={handleInsertImage}
+                                        activeOpacity={0.7}
+                                    >
+                                        <MaterialCommunityIcons name="image" size={16} color={theme.colors.secondary} />
+                                        <Text variant="labelSmall" style={{ color: theme.colors.secondary, marginLeft: 2 }}>
+                                            图片
+                                        </Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity
+                                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: theme.colors.tertiaryContainer }}
+                                        onPress={handleInsertLink}
+                                        activeOpacity={0.7}
+                                    >
+                                        <MaterialCommunityIcons name="link" size={16} color={theme.colors.tertiary} />
+                                        <Text variant="labelSmall" style={{ color: theme.colors.tertiary, marginLeft: 2 }}>
+                                            链接
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
-
-                        {selectedImages.length > 0 && (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-                                {selectedImages.map((img, index) => (
-                                    <View key={index} style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden' }}>
-                                        <Image source={{ uri: img.uri }} style={{ width: '100%', height: '100%' }} />
-                                        <TouchableOpacity
-                                            style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.error }}
-                                            onPress={() => removeImage(index)}
-                                            activeOpacity={0.7}
-                                        >
-                                            <MaterialCommunityIcons name="close" size={14} color="#fff" />
+                        
+                        {/* 已插入的图片和链接预览 */}
+                        {(bodyImages.length > 0 || bodyLinks.length > 0) && (
+                            <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: theme.colors.outline + '30' }}>
+                                <Text variant="labelSmall" style={{ color: theme.colors.outline, marginBottom: 8 }}>
+                                    已插入内容
+                                </Text>
+                                
+                                {/* 图片预览 */}
+                                {bodyImages.map((img, index) => (
+                                    <View key={`img_${index}`} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                        <MaterialCommunityIcons name="image" size={16} color={theme.colors.secondary} />
+                                        <Text variant="labelSmall" style={{ flex: 1, marginLeft: 8, color: theme.colors.onSurfaceVariant }}>
+                                            [IMG={img.uri}]
+                                        </Text>
+                                        <TouchableOpacity onPress={() => removeBodyImage(index)}>
+                                            <MaterialCommunityIcons name="close-circle" size={16} color={theme.colors.error} />
+                                        </TouchableOpacity>
+                                    </View>
+                                ))}
+                                
+                                {/* 链接预览 */}
+                                {bodyLinks.map((link, index) => (
+                                    <View key={`link_${index}`} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                        <MaterialCommunityIcons name="link" size={16} color={theme.colors.tertiary} />
+                                        <Text variant="labelSmall" style={{ flex: 1, marginLeft: 8, color: theme.colors.onSurfaceVariant }} numberOfLines={1}>
+                                            [URL={link}]{link}[/URL]
+                                        </Text>
+                                        <TouchableOpacity onPress={() => removeBodyLink(index)}>
+                                            <MaterialCommunityIcons name="close-circle" size={16} color={theme.colors.error} />
                                         </TouchableOpacity>
                                     </View>
                                 ))}
                             </View>
                         )}
 
-                        <TouchableOpacity
-                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
-                            onPress={handlePickImages}
-                            activeOpacity={0.7}
-                        >
-                            <MaterialCommunityIcons name="plus" size={22} color={theme.colors.primary} />
-                            <Text variant="labelMedium" style={{ color: theme.colors.primary, marginLeft: 6 }}>
-                                从相册选择
-                            </Text>
-                        </TouchableOpacity>
+                        {/* 插入图片对话框 */}
+                        <Portal>
+                            <Dialog visible={insertImageDialogVisible} onDismiss={() => setInsertImageDialogVisible(false)} style={{ borderRadius: 16 }}>
+                                <Dialog.Title>插入图片链接</Dialog.Title>
+                                <Dialog.Content>
+                                    <Text style={{ marginBottom: 16 }}>请输入图片链接地址</Text>
+                                    <TextInput
+                                        value={imageInputValue}
+                                        onChangeText={setImageInputValue}
+                                        autoFocus
+                                        multiline={false}
+                                        style={{ marginBottom: 16 }}
+                                    />
+                                </Dialog.Content>
+                                <Dialog.Actions>
+                                    <Button onPress={() => setInsertImageDialogVisible(false)}>取消</Button>
+                                    <Button onPress={confirmInsertImage}>确定</Button>
+                                </Dialog.Actions>
+                            </Dialog>
+                        </Portal>
+
+                        {/* 插入链接对话框 */}
+                        <Portal>
+                            <Dialog visible={insertLinkDialogVisible} onDismiss={() => setInsertLinkDialogVisible(false)} style={{ borderRadius: 16 }}>
+                                <Dialog.Title>插入链接</Dialog.Title>
+                                <Dialog.Content>
+                                    <Text style={{ marginBottom: 16 }}>请输入链接地址</Text>
+                                    <TextInput
+                                        value={linkInputValue}
+                                        onChangeText={setLinkInputValue}
+                                        autoFocus
+                                        multiline={false}
+                                        style={{ marginBottom: 16 }}
+                                    />
+                                </Dialog.Content>
+                                <Dialog.Actions>
+                                    <Button onPress={() => setInsertLinkDialogVisible(false)}>取消</Button>
+                                    <Button onPress={confirmInsertLink}>确定</Button>
+                                </Dialog.Actions>
+                            </Dialog>
+                        </Portal>
                     </Surface>
 
-                    {/* ── 脚本选择 ── */}
-                    <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1, marginTop: 12 }} elevation={0}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                            <MaterialCommunityIcons name="script-text" size={20} color={theme.colors.tertiary} />
-                            <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
-                                脚本
+                    {/* ── 附件区域 ── */}
+                    {selectedTag ? (
+                        <>
+                            <Text variant="labelLarge" style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.onSurfaceVariant, marginTop: 24 }}>
+                                附件
                             </Text>
-                        </View>
 
-                        {selectedScript && (
-                            <Surface
-                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, marginBottom: 12, backgroundColor: theme.colors.secondaryContainer }}
-                                elevation={0}
-                            >
-                                <MaterialCommunityIcons name="script-text-outline" size={18} color={theme.colors.onSecondaryContainer} />
-                                <Text
-                                    variant="bodyMedium"
-                                    style={{ flex: 1, marginLeft: 8, color: theme.colors.onSecondaryContainer, fontWeight: '500' }}
-                                    numberOfLines={1}
-                                >
-                                    {selectedScript.name}
-                                </Text>
-                                <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer + '80', marginRight: 8 }}>
-                                    {selectedScript.steps.length} 步
-                                </Text>
-                                <TouchableOpacity onPress={removeScript} activeOpacity={0.7}>
-                                    <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.onSecondaryContainer + '80'} />
-                                </TouchableOpacity>
-                            </Surface>
-                        )}
-
-                        <TouchableOpacity
-                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
-                            onPress={() => {
-                                if (savedScripts.length === 0) {
-                                    setSnackMessage('暂无已保存的脚本');
-                                    setSnackVisible(true);
-                                    return;
-                                }
-                                setScriptDialogVisible(true);
-                            }}
-                            activeOpacity={0.7}
-                        >
-                            <MaterialCommunityIcons name="plus" size={22} color={theme.colors.tertiary} />
-                            <Text variant="labelMedium" style={{ color: theme.colors.tertiary, marginLeft: 6 }}>
-                                选择脚本
-                            </Text>
-                        </TouchableOpacity>
-                    </Surface>
-
-                    {/* ── 扩展文件选择 ── */}
-                    <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1, marginTop: 12 }} elevation={0}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                            <MaterialCommunityIcons name="file-plus" size={20} color={theme.colors.secondary} />
-                            <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
-                                扩展附件
-                            </Text>
-                            <Text variant="labelSmall" style={{ marginLeft: 8, color: theme.colors.outline }}>
-                                支持任意文件
-                            </Text>
-                        </View>
-
-                        {selectedExtFile && (
-                            <Surface
-                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, marginBottom: 12, backgroundColor: theme.colors.secondaryContainer }}
-                                elevation={0}
-                            >
-                                <MaterialCommunityIcons name="file-outline" size={18} color={theme.colors.onSecondaryContainer} />
-                                <View style={{ flex: 1, marginLeft: 8 }}>
-                                    <Text
-                                        variant="bodyMedium"
-                                        style={{ color: theme.colors.onSecondaryContainer, fontWeight: '500' }}
-                                        numberOfLines={1}
-                                    >
-                                        {selectedExtFile.name}
-                                    </Text>
-                                    {selectedExtFile.size != null && (
-                                        <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer + '80', marginTop: 2 }}>
-                                            {selectedExtFile.size > 1024 * 1024
-                                                ? `${(selectedExtFile.size / 1024 / 1024).toFixed(1)} MB`
-                                                : `${(selectedExtFile.size / 1024).toFixed(1)} KB`}
+                            {/* ── 图片选择 ── */}
+                            {canAddImages && (
+                                <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                        <MaterialCommunityIcons name="image-multiple" size={20} color={theme.colors.primary} />
+                                        <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
+                                            图片
                                         </Text>
-                                    )}
-                                </View>
-                                <TouchableOpacity onPress={removeExtension} activeOpacity={0.7}>
-                                    <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.onSecondaryContainer + '80'} />
-                                </TouchableOpacity>
-                            </Surface>
-                        )}
+                                        <Text variant="labelSmall" style={{ marginLeft: 8, color: theme.colors.outline }}>
+                                            {selectedImages.length}/1
+                                        </Text>
+                                    </View>
 
-                        <TouchableOpacity
-                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
-                            onPress={handlePickExtension}
-                            activeOpacity={0.7}
-                        >
-                            <MaterialCommunityIcons name="plus" size={22} color={theme.colors.secondary} />
-                            <Text variant="labelMedium" style={{ color: theme.colors.secondary, marginLeft: 6 }}>
-                                选择文件
-                            </Text>
-                        </TouchableOpacity>
-                    </Surface>
+                                    {selectedImages.length > 0 && (
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                                            {selectedImages.map((img, index) => (
+                                                <View key={index} style={{ width: 80, height: 80, borderRadius: 12, overflow: 'hidden' }}>
+                                                    <Image source={{ uri: img.uri }} style={{ width: '100%', height: '100%' }} />
+                                                    <TouchableOpacity
+                                                        style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.error }}
+                                                        onPress={() => removeImage(index)}
+                                                        activeOpacity={0.7}
+                                                    >
+                                                        <MaterialCommunityIcons name="close" size={14} color="#fff" />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
+                                    <TouchableOpacity
+                                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
+                                        onPress={handlePickImages}
+                                        activeOpacity={0.7}
+                                    >
+                                        <MaterialCommunityIcons name="plus" size={22} color={theme.colors.primary} />
+                                        <Text variant="labelMedium" style={{ color: theme.colors.primary, marginLeft: 6 }}>
+                                            从相册选择
+                                        </Text>
+                                    </TouchableOpacity>
+                                </Surface>
+                            )}
+
+                            {/* ── 脚本选择 ── */}
+                            {canAddScripts && (
+                                <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1, marginTop: canAddImages ? 12 : 0 }} elevation={0}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                        <MaterialCommunityIcons name="script-text" size={20} color={theme.colors.tertiary} />
+                                        <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
+                                            脚本
+                                        </Text>
+                                    </View>
+
+                                    {selectedScript && (
+                                        <Surface
+                                            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, marginBottom: 12, backgroundColor: theme.colors.secondaryContainer }}
+                                            elevation={0}
+                                        >
+                                            <MaterialCommunityIcons name="script-text-outline" size={18} color={theme.colors.onSecondaryContainer} />
+                                            <Text
+                                                variant="bodyMedium"
+                                                style={{ flex: 1, marginLeft: 8, color: theme.colors.onSecondaryContainer, fontWeight: '500' }}
+                                                numberOfLines={1}
+                                            >
+                                                {selectedScript.name}
+                                            </Text>
+                                            <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer + '80', marginRight: 8 }}>
+                                                {selectedScript.steps.length} 步
+                                            </Text>
+                                            <TouchableOpacity onPress={removeScript} activeOpacity={0.7}>
+                                                <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.onSecondaryContainer + '80'} />
+                                            </TouchableOpacity>
+                                        </Surface>
+                                    )}
+
+                                    <TouchableOpacity
+                                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
+                                        onPress={() => {
+                                            if (savedScripts.length === 0) {
+                                                setSnackMessage('暂无已保存的脚本');
+                                                setSnackVisible(true);
+                                                return;
+                                            }
+                                            setScriptDialogVisible(true);
+                                        }}
+                                        activeOpacity={0.7}
+                                    >
+                                        <MaterialCommunityIcons name="plus" size={22} color={theme.colors.tertiary} />
+                                        <Text variant="labelMedium" style={{ color: theme.colors.tertiary, marginLeft: 6 }}>
+                                            选择脚本
+                                        </Text>
+                                    </TouchableOpacity>
+                                </Surface>
+                            )}
+
+                            {/* ── 扩展文件选择 ── */}
+                            {canAddExtensions && (
+                                <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1, marginTop: (canAddImages || canAddScripts) ? 12 : 0 }} elevation={0}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                        <MaterialCommunityIcons name="file-plus" size={20} color={theme.colors.secondary} />
+                                        <Text variant="labelLarge" style={{ marginLeft: 8, color: theme.colors.onSurface, fontWeight: '600' }}>
+                                            扩展附件
+                                        </Text>
+                                        <Text variant="labelSmall" style={{ marginLeft: 8, color: theme.colors.outline }}>
+                                            支持任意文件
+                                        </Text>
+                                    </View>
+
+                                    {selectedExtFile && (
+                                        <Surface
+                                            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, marginBottom: 12, backgroundColor: theme.colors.secondaryContainer }}
+                                            elevation={0}
+                                        >
+                                            <MaterialCommunityIcons name="file-outline" size={18} color={theme.colors.onSecondaryContainer} />
+                                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                                <Text
+                                                    variant="bodyMedium"
+                                                    style={{ color: theme.colors.onSecondaryContainer, fontWeight: '500' }}
+                                                    numberOfLines={1}
+                                                >
+                                                    {selectedExtFile.name}
+                                                </Text>
+                                                {selectedExtFile.size != null && (
+                                                    <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer + '80', marginTop: 2 }}>
+                                                        {selectedExtFile.size > 1024 * 1024
+                                                            ? `${(selectedExtFile.size / 1024 / 1024).toFixed(1)} MB`
+                                                            : `${(selectedExtFile.size / 1024).toFixed(1)} KB`}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                            <TouchableOpacity onPress={removeExtension} activeOpacity={0.7}>
+                                                <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.onSecondaryContainer + '80'} />
+                                            </TouchableOpacity>
+                                        </Surface>
+                                    )}
+
+                                    <TouchableOpacity
+                                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderStyle: 'dashed', borderColor: theme.colors.outline + '60' }}
+                                        onPress={handlePickExtension}
+                                        activeOpacity={0.7}
+                                    >
+                                        <MaterialCommunityIcons name="plus" size={22} color={theme.colors.secondary} />
+                                        <Text variant="labelMedium" style={{ color: theme.colors.secondary, marginLeft: 6 }}>
+                                            选择文件
+                                        </Text>
+                                    </TouchableOpacity>
+                                </Surface>
+                            )}
+
+                            {!canAddImages && !canAddScripts && !canAddExtensions && (
+                                <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1 }} elevation={0}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <MaterialCommunityIcons name="information-outline" size={20} color={theme.colors.outline} />
+                                        <Text variant="bodyMedium" style={{ marginLeft: 8, color: theme.colors.outline }}>
+                                            此分类不支持添加附件
+                                        </Text>
+                                    </View>
+                                </Surface>
+                            )}
+                        </>
+                    ) : (
+                        <Surface style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.elevation.level1, marginTop: 24 }} elevation={0}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name="information-outline" size={20} color={theme.colors.outline} />
+                                <Text variant="bodyMedium" style={{ marginLeft: 8, color: theme.colors.outline }}>
+                                    请先选择分类
+                                </Text>
+                            </View>
+                        </Surface>
+                    )}
 
                 </ScrollView>
             </KeyboardAvoidingView>

@@ -283,7 +283,7 @@ class ApiService {
     download: string;
   }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/vapi/app.json`);
+      const response = await fetch(`${API_BASE_URL}/vapi/app.json?timestamp=${Date.now()}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -80,6 +80,8 @@ const PostItem = ({ item, theme, onPress }: { item: Post, theme: any, onPress?: 
     const scale = useRef(new Animated.Value(1)).current;
     const onPressIn = () => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start();
     const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
+    
+    const isOfficial = item.file_path && item.file_path.includes('official');
 
     return (
         <Animated.View style={{ transform: [{ scale }] }}>
@@ -109,9 +111,24 @@ const PostItem = ({ item, theme, onPress }: { item: Post, theme: any, onPress?: 
                                     <Text variant="labelMedium" style={{ color: theme.colors.onSurface }}>{item.author}</Text>
                                 </View>
                             </View>
-                            <Surface style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: theme.colors.tertiaryContainer }} elevation={0}>
-                                <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{categoryToNameMap[item.category] || item.category}</Text>
-                            </Surface>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Surface style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: theme.colors.tertiaryContainer }} elevation={0}>
+                                    <Text variant="labelSmall" style={{ color: theme.colors.onTertiaryContainer, fontWeight: 'bold' }}>{categoryToNameMap[item.category] || item.category}</Text>
+                                </Surface>
+                                {isOfficial && (
+                                    <View style={{
+                                        paddingHorizontal: 6,
+                                        paddingVertical: 2,
+                                        borderRadius: 4,
+                                        marginLeft: 8,
+                                        backgroundColor: theme.colors.primaryContainer
+                                    }}>
+                                        <Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer, fontWeight: 'bold' }}>
+                                            官方
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
                         </View>
                         <Text variant="titleMedium" style={{ fontWeight: 'bold', marginTop: 12, marginBottom: 4 }}>{item.title}</Text>
                         <Text variant="bodyMedium" numberOfLines={2} style={{ color: theme.colors.onSurfaceVariant }}>
@@ -147,7 +164,7 @@ const CommunityScreen = ({ navigation }: any) => {
     // 3. FAB Pop-in Animation
     const fabScaleAnim = useRef(new Animated.Value(0)).current;
 
-    const filters = ['全部', '扩展', '主题', '脚本', '帖子'];
+    const filters = ['全部', '扩展', '主题', '脚本', '帖子', '官方'];
 
     // Map Chinese UI labels to API category values
     const filterToCategoryMap: Record<string, string | undefined> = {
@@ -156,14 +173,24 @@ const CommunityScreen = ({ navigation }: any) => {
       '主题': 'theme',
       '脚本': 'script',
       '帖子': 'article',
+      '官方': undefined, // Special case for official posts
     };
 
     // ── Fetch Posts ──
-    const fetchPosts = useCallback(async (category?: string, search?: string) => {
+    const fetchPosts = useCallback(async (category?: string, search?: string, officialOnly?: boolean) => {
         try {
             const result = await OLAPI.getPosts({ category, search });
             if (result.success && result.data) {
-                setPosts(result.data);
+                let filteredPosts = result.data;
+                
+                // Filter for official posts if requested
+                if (officialOnly) {
+                    filteredPosts = filteredPosts.filter(post => 
+                        post.file_path && post.file_path.includes('official')
+                    );
+                }
+                
+                setPosts(filteredPosts);
             } else {
                 setPosts([]);
             }
@@ -200,11 +227,12 @@ const CommunityScreen = ({ navigation }: any) => {
     // Consolidated data-fetching effect (handles both filter & search)
     useEffect(() => {
         const mappedCategory = filterToCategoryMap[selectedFilter];
+        const isOfficialOnly = selectedFilter === '官方';
         const delayMs = searchQuery ? 500 : 0; // debounce only for search input
 
         const delayDebounceFn = setTimeout(() => {
             setLoading(true);
-            fetchPosts(mappedCategory, searchQuery || undefined).finally(() => setLoading(false));
+            fetchPosts(mappedCategory, searchQuery || undefined, isOfficialOnly).finally(() => setLoading(false));
         }, delayMs);
 
         return () => clearTimeout(delayDebounceFn);
@@ -213,7 +241,9 @@ const CommunityScreen = ({ navigation }: any) => {
     // Pull-to-refresh
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await fetchPosts(filterToCategoryMap[selectedFilter], searchQuery || undefined);
+        const mappedCategory = filterToCategoryMap[selectedFilter];
+        const isOfficialOnly = selectedFilter === '官方';
+        await fetchPosts(mappedCategory, searchQuery || undefined, isOfficialOnly);
         setRefreshing(false);
     }, [selectedFilter, searchQuery, fetchPosts]);
 

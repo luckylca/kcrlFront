@@ -82,7 +82,9 @@ const AboutScreen = ({ navigation }: any) => {
 
     useEffect(() => {
         setCurrentVersion(Number(DeviceInfo.getBuildNumber()));
-        setCurrentVersionName(DeviceInfo.getVersion() || '1.0 Preview');
+        const versionName = DeviceInfo.getVersion();
+        // 确保版本名完整显示，不截断
+        setCurrentVersionName(versionName || '1.0 Preview');
         checkUpdate();
     }, []);
 
@@ -302,6 +304,8 @@ const AboutScreen = ({ navigation }: any) => {
                 <Text
                   variant="titleMedium"
                   style={{ fontWeight: 'bold', color: theme.colors.onSurface }}
+                  numberOfLines={2}
+                  adjustsFontSizeToFit={true}
                 >
                   {currentVersionName}
                 </Text>
@@ -361,7 +365,11 @@ const AboutScreen = ({ navigation }: any) => {
                 </Text>
               </View>
               <View style={{ alignItems: 'center', marginBottom: 16 }}>
-                <MaterialCommunityIcons name="arrow-down" size={24} color={theme.colors.primary} />
+                <MaterialCommunityIcons
+                  name="arrow-down"
+                  size={24}
+                  color={theme.colors.primary}
+                />
               </View>
               <View
                 style={{
@@ -380,7 +388,7 @@ const AboutScreen = ({ navigation }: any) => {
                     fontWeight: '600',
                   }}
                 >
-                  v{updateInfo.version_name}
+                  {updateInfo.version_name} (Build {updateInfo.version})
                 </Text>
               </View>
               <Text
@@ -400,7 +408,10 @@ const AboutScreen = ({ navigation }: any) => {
                   marginBottom: 8,
                 }}
               >
-                APK大小: {apkSize > 0 ? `${(apkSize / 1024 / 1024).toFixed(2)} MB` : '获取中...'}
+                APK大小:{' '}
+                {apkSize > 0
+                  ? `${(apkSize / 1024 / 1024).toFixed(2)} MB`
+                  : '获取中...'}
               </Text>
               <View
                 style={{
@@ -410,7 +421,10 @@ const AboutScreen = ({ navigation }: any) => {
                   maxHeight: 200,
                 }}
               >
-                <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={false}
+                >
                   <Text
                     variant="bodyMedium"
                     style={{
@@ -424,11 +438,21 @@ const AboutScreen = ({ navigation }: any) => {
               </View>
               {downloading && (
                 <View style={{ marginTop: 16 }}>
-                  <Text variant="bodySmall" style={{ color: theme.colors.outline, marginBottom: 8 }}>
+                  <Text
+                    variant="bodySmall"
+                    style={{ color: theme.colors.outline, marginBottom: 8 }}
+                  >
                     下载进度
                   </Text>
                   <ProgressBar progress={downloadProgress} />
-                  <Text variant="bodySmall" style={{ color: theme.colors.outline, marginTop: 4, textAlign: 'center' }}>
+                  <Text
+                    variant="bodySmall"
+                    style={{
+                      color: theme.colors.outline,
+                      marginTop: 4,
+                      textAlign: 'center',
+                    }}
+                  >
                     {Math.round(downloadProgress * 100)}%
                   </Text>
                 </View>
