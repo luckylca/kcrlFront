@@ -88,27 +88,28 @@ const HomeScreen = ({ navigation }: any) => {
 
 
     useEffect(() => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          damping: 20,
-          stiffness: 90,
-          useNativeDriver: true,
-        }),
-      ]).start();
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                damping: 20,
+                stiffness: 90,
+                useNativeDriver: true,
+            }),
+        ]).start();
     }, [fadeAnim, slideAnim]);
     const openAutoStartActivity = async () => {
-      try {
-        const result = await IntentLauncher.openAutoStartActivity();
-        console.log('Activity 是否打开:', result);
-      } catch (err) {
-        console.error('打开 Activity 失败:', err);
-      }
+        try {
+            const result = await IntentLauncher.openAutoStartActivity();
+            console.log('Activity 是否打开:', result);
+        } catch (err) {
+            console.error('打开 Activity 失败:', err);
+            Linking.openURL("http://47.113.189.138/service.html")
+        }
     };
     const statusCardPress = async () => {
         if (socket === null) {
