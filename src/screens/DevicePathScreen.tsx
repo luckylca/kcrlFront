@@ -101,12 +101,10 @@ const DevicePathScreen = ({ navigation }: any) => {
                         setSnackMessage(`检测到按键: ${data.keycode}  设备: ${data.device}`);
                         setSnackVisible(true);
                     }
-                    // Reset trigger when state goes back to 0 (key released)
                     if (data && data.state === 0 && hasTriggeredRef.current) {
                         hasTriggeredRef.current = false;
                     }
                 } catch {
-                    // ignore transient errors
                 }
             }, 500);
         } catch (e: any) {

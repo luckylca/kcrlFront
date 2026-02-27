@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     ScrollView,
-    TextInput,
     Animated,
     TouchableOpacity,
     KeyboardAvoidingView,
@@ -19,6 +18,7 @@ import {
     Button,
     Snackbar,
     Portal,
+    TextInput,
     Dialog,
     RadioButton,
     ActivityIndicator,
@@ -114,12 +114,12 @@ const CreatePostScreen = ({ navigation }: any) => {
     const [selectedScript, setSelectedScript] = useState<SavedScript | null>(null);
     const [scriptDialogVisible, setScriptDialogVisible] = useState(false);
     const [selectedExtFile, setSelectedExtFile] = useState<{
-      uri: string;
-      name: string;
-      type: string;
-      size?: number;
+        uri: string;
+        name: string;
+        type: string;
+        size?: number;
     } | null>(null);
-    
+
     // 新增：正文中的图片和链接
     const [bodyImages, setBodyImages] = useState<Asset[]>([]);
     const [bodyLinks, setBodyLinks] = useState<string[]>([]);
@@ -236,7 +236,7 @@ const CreatePostScreen = ({ navigation }: any) => {
             const imageIndex = bodyImages.length;
             const imageTag = `[IMG=${imageInputValue.trim()}]`;
             setBody(prevBody => prevBody + '\n' + imageTag + '\n');
-            
+
             // 添加到图片列表（仅用于显示，不上传）
             setBodyImages(prev => [...prev, { uri: imageInputValue.trim(), fileName: `image_${imageIndex}`, type: 'image/jpeg' } as Asset]);
         }
@@ -247,7 +247,7 @@ const CreatePostScreen = ({ navigation }: any) => {
         if (linkInputValue.trim()) {
             const newLinks = [...bodyLinks, linkInputValue.trim()];
             setBodyLinks(newLinks);
-            
+
             // 在正文中插入链接标记
             const linkTag = `[URL=${linkInputValue.trim()}]${linkInputValue.trim()}[/URL]`;
             setBody(prevBody => prevBody + '\n' + linkTag + '\n');
@@ -258,7 +258,7 @@ const CreatePostScreen = ({ navigation }: any) => {
     const removeBodyImage = (index: number) => {
         const newImages = bodyImages.filter((_, i) => i !== index);
         setBodyImages(newImages);
-        
+
         // 从正文中移除对应的图片标记
         const imageTag = `[IMG=${bodyImages[index].uri}]`;
         setBody(prevBody => prevBody.replace(imageTag, ''));
@@ -267,7 +267,7 @@ const CreatePostScreen = ({ navigation }: any) => {
     const removeBodyLink = (index: number) => {
         const newLinks = bodyLinks.filter((_, i) => i !== index);
         setBodyLinks(newLinks);
-        
+
         // 从正文中移除对应的链接标记
         const linkTag = `[URL=${bodyLinks[index]}]${bodyLinks[index]}[/URL]`;
         setBody(prevBody => prevBody.replace(linkTag, ''));
@@ -447,7 +447,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                             multiline
                             textAlignVertical="top"
                         />
-                        
+
                         {/* 正文工具栏 */}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: theme.colors.outline + '30' }}>
                             <TouchableOpacity
@@ -460,7 +460,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                                     插入
                                 </Text>
                             </TouchableOpacity>
-                            
+
                             {showInsertTools && (
                                 <View style={{ flexDirection: 'row', gap: 8 }}>
                                     <TouchableOpacity
@@ -473,7 +473,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                                             图片
                                         </Text>
                                     </TouchableOpacity>
-                                    
+
                                     <TouchableOpacity
                                         style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: theme.colors.tertiaryContainer }}
                                         onPress={handleInsertLink}
@@ -487,14 +487,14 @@ const CreatePostScreen = ({ navigation }: any) => {
                                 </View>
                             )}
                         </View>
-                        
+
                         {/* 已插入的图片和链接预览 */}
                         {(bodyImages.length > 0 || bodyLinks.length > 0) && (
                             <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: theme.colors.outline + '30' }}>
                                 <Text variant="labelSmall" style={{ color: theme.colors.outline, marginBottom: 8 }}>
                                     已插入内容
                                 </Text>
-                                
+
                                 {/* 图片预览 */}
                                 {bodyImages.map((img, index) => (
                                     <View key={`img_${index}`} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -507,7 +507,7 @@ const CreatePostScreen = ({ navigation }: any) => {
                                         </TouchableOpacity>
                                     </View>
                                 ))}
-                                
+
                                 {/* 链接预览 */}
                                 {bodyLinks.map((link, index) => (
                                     <View key={`link_${index}`} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -528,11 +528,11 @@ const CreatePostScreen = ({ navigation }: any) => {
                             <Dialog visible={insertImageDialogVisible} onDismiss={() => setInsertImageDialogVisible(false)} style={{ borderRadius: 16 }}>
                                 <Dialog.Title>插入图片链接</Dialog.Title>
                                 <Dialog.Content>
-                                    <Text style={{ marginBottom: 16 }}>请输入图片链接地址</Text>
                                     <TextInput
                                         value={imageInputValue}
                                         onChangeText={setImageInputValue}
-                                        autoFocus
+                                        label="链接地址"
+                                        mode='outlined'
                                         multiline={false}
                                         style={{ marginBottom: 16 }}
                                     />
@@ -549,11 +549,11 @@ const CreatePostScreen = ({ navigation }: any) => {
                             <Dialog visible={insertLinkDialogVisible} onDismiss={() => setInsertLinkDialogVisible(false)} style={{ borderRadius: 16 }}>
                                 <Dialog.Title>插入链接</Dialog.Title>
                                 <Dialog.Content>
-                                    <Text style={{ marginBottom: 16 }}>请输入链接地址</Text>
                                     <TextInput
                                         value={linkInputValue}
                                         onChangeText={setLinkInputValue}
-                                        autoFocus
+                                        label="链接地址"
+                                        mode='outlined'
                                         multiline={false}
                                         style={{ marginBottom: 16 }}
                                     />

@@ -9,7 +9,7 @@ import { useSettingStore } from './src/store/useSettingStore';
 import ApiService from './src/api/OLAPI';
 import DeviceInfo from 'react-native-device-info';
 import { createNavigationContainerRef } from '@react-navigation/native';
-
+import UpdateCard from './src/screens/component/UpdateCard';
 import Utest, { testable } from './src/screens/Utest/libUtest.tsx';
 
 
@@ -31,31 +31,31 @@ function App() {
   const backgroundOpacity = useSettingStore(state => state.backgroundOpacity);
 
   // 后台检查更新
-  React.useEffect(() => {
-    const checkForUpdates = async () => {
-      try {
-        const currentBuild = Number(DeviceInfo.getBuildNumber());
-        const updateInfo = await ApiService.getUpdataInfo();
-        
-        if (updateInfo.version > currentBuild) {
-          console.log('发现新版本:', updateInfo.version_name);
-          // 跳转到关于页面
-          setTimeout(() => {
-            if (navigationRef.isReady()) {
-              navigationRef.navigate('About');
-            }
-          }, 1000);
-        }
-      } catch (error) {
-        console.error('检查更新失败:', error);
-      }
-    };
+  // React.useEffect(() => {
+  //   const checkForUpdates = async () => {
+  //     try {
+  //       const currentBuild = Number(DeviceInfo.getBuildNumber());
+  //       const updateInfo = await ApiService.getUpdataInfo();
 
-    // 延迟3秒后检查更新，避免影响应用启动
-    const timer = setTimeout(checkForUpdates, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
+  //       if (updateInfo.version > currentBuild) {
+  //         console.log('发现新版本:', updateInfo.version_name);
+  //         // 跳转到关于页面
+  //         setTimeout(() => {
+  //           if (navigationRef.isReady()) {
+  //             navigationRef.navigate('About');
+  //           }
+  //         }, 1000);
+  //       }
+  //     } catch (error) {
+  //       console.error('检查更新失败:', error);
+  //     }
+  //   };
+
+  //   // 延迟3秒后检查更新，避免影响应用启动
+  //   const timer = setTimeout(checkForUpdates, 100);
+
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   // Dynamic Theme Construction
   const baseTheme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
@@ -108,6 +108,7 @@ function App() {
                   opacity: backgroundOpacity,
                 }}
               />
+
             </ImageBackground>
           </View>
         ) : null}
@@ -115,6 +116,7 @@ function App() {
         <NavigationContainer ref={navigationRef} theme={combinedTheme}>
           <RootNavigator />
         </NavigationContainer>
+        <UpdateCard />
       </PaperProvider>
     </SafeAreaProvider>
     // <Utest />

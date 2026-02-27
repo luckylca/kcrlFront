@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
-import { Appbar, Text, useTheme, Surface, IconButton, TextInput, Button, Divider, Portal, Dialog, Paragraph } from 'react-native-paper';
+import { Appbar, Text, useTheme, Surface, IconButton, TextInput, Button, Divider, Portal, Dialog, Paragraph, Snackbar } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -28,58 +28,47 @@ type TemplateCategory = {
 };
 
 export const TEMPLATE_LIBRARY: TemplateCategory[] = [
-    {
-        title: '默认',
-        data: [
-            { type: 'system', name: '严格模式(set -e)', command: 'set -e', icon: 'alert-circle-outline' },
-            { type: 'system', name: '打印(ECHO)', command: 'echo "Hello"', icon: 'message-text-outline' },
-            { type: 'system', name: '延时 0.3s', command: 'sleep 0.3', icon: 'clock-outline' },
-            { type: 'system', name: '延时 1s', command: 'sleep 1', icon: 'clock-outline' },
-            { type: 'system', name: '定义变量', command: 'VAR="value"', icon: 'variable' },
-            { type: 'system', name: '读取变量', command: 'echo "$VAR"', icon: 'variable-box' },
-        ],
-    },
 
-    {
-        title: '逻辑类',
-        data: [
-            // if 条件拼接：配合脚本生成器，会把 if/elif 后续条件片段用空格拼成一行
-            { type: 'logic', name: '如果(if)', command: 'if ', icon: 'call-split' },
-            { type: 'logic', name: '并且(&&)', command: ' && ', icon: 'logic-and' },
-            { type: 'logic', name: '或者(||)', command: ' || ', icon: 'logic-or' },
-            { type: 'logic', name: '则(then)', command: '; then', icon: 'code-greater-than' },
-            { type: 'logic', name: '否则(else)', command: 'else', icon: 'call-merge' },
-            { type: 'logic', name: '闭合(fi)', command: 'fi', icon: 'close-circle-outline' },
+    // {
+    //     title: '逻辑类',
+    //     data: [
+    //         // if 条件拼接：配合脚本生成器，会把 if/elif 后续条件片段用空格拼成一行
+    //         { type: 'logic', name: '如果(if)', command: 'if ', icon: 'call-split' },
+    //         { type: 'logic', name: '并且(&&)', command: ' && ', icon: 'logic-and' },
+    //         { type: 'logic', name: '或者(||)', command: ' || ', icon: 'logic-or' },
+    //         { type: 'logic', name: '则(then)', command: '; then', icon: 'code-greater-than' },
+    //         { type: 'logic', name: '否则(else)', command: 'else', icon: 'call-merge' },
+    //         { type: 'logic', name: '闭合(fi)', command: 'fi', icon: 'close-circle-outline' },
 
-            // 常用判断
-            { type: 'logic', name: '屏幕亮？', command: 'dumpsys power | grep -q "Display Power: state=ON"', icon: 'monitor' },
-            { type: 'logic', name: '网络通？(ping)', command: 'ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1', icon: 'wifi' },
-            { type: 'logic', name: '进程存在？(包名)', command: 'pidof "【包名】" >/dev/null 2>&1', icon: 'format-list-checks' },
-            {
-                type: 'logic',
-                name: '前台应用？(包名)',
-                command: 'dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | head -n 1 | grep -q "【包名】"',
-                icon: 'application-outline',
-            },
-            { type: 'logic', name: '文件存在？', command: '[ -f "【文件路径】" ]', icon: 'file-check-outline' },
-            { type: 'logic', name: '目录存在？', command: '[ -d "【目录路径】" ]', icon: 'folder-check-outline' },
-            { type: 'logic', name: '字符串相等？', command: '[ "$A" = "$B" ]', icon: 'code-equal' },
-            { type: 'logic', name: '数字大于？', command: '[ "$A" -gt "$B" ]', icon: 'numeric' },
-            { type: 'logic', name: '数字小于？', command: '[ "$A" -lt "$B" ]', icon: 'numeric' },
-        ],
-    },
+    //         // 常用判断
+    //         { type: 'logic', name: '屏幕亮？', command: 'dumpsys power | grep -q "Display Power: state=ON"', icon: 'monitor' },
+    //         { type: 'logic', name: '网络通？(ping)', command: 'ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1', icon: 'wifi' },
+    //         { type: 'logic', name: '进程存在？(包名)', command: 'pidof "【包名】" >/dev/null 2>&1', icon: 'format-list-checks' },
+    //         {
+    //             type: 'logic',
+    //             name: '前台应用？(包名)',
+    //             command: 'dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | head -n 1 | grep -q "【包名】"',
+    //             icon: 'application-outline',
+    //         },
+    //         { type: 'logic', name: '文件存在？', command: '[ -f "【文件路径】" ]', icon: 'file-check-outline' },
+    //         { type: 'logic', name: '目录存在？', command: '[ -d "【目录路径】" ]', icon: 'folder-check-outline' },
+    //         { type: 'logic', name: '字符串相等？', command: '[ "$A" = "$B" ]', icon: 'code-equal' },
+    //         { type: 'logic', name: '数字大于？', command: '[ "$A" -gt "$B" ]', icon: 'numeric' },
+    //         { type: 'logic', name: '数字小于？', command: '[ "$A" -lt "$B" ]', icon: 'numeric' },
+    //     ],
+    // },
 
     {
         title: '功能控制类',
         data: [
+            { type: 'system', name: '延时 1s', command: 'sleep 1', icon: 'clock-outline' },
             // 输入事件
-            { type: 'function', name: '息屏/开屏(电源键)', command: 'input keyevent 26', icon: 'power' },
             { type: 'function', name: '返回', command: 'input keyevent 4', icon: 'keyboard-return' },
             { type: 'function', name: 'Home', command: 'input keyevent 3', icon: 'home-outline' },
             { type: 'function', name: '最近任务', command: 'input keyevent 187', icon: 'view-grid-outline' },
             { type: 'function', name: '音量+', command: 'input keyevent 24', icon: 'volume-plus' },
             { type: 'function', name: '音量-', command: 'input keyevent 25', icon: 'volume-minus' },
-            { type: 'function', name: '静音键(切换)', command: 'input keyevent 164', icon: 'volume-mute' },
+            { type: 'function', name: '静音键', command: 'input keyevent 164', icon: 'volume-mute' },
 
             // 通知栏/快捷设置
             { type: 'function', name: '展开通知栏', command: 'cmd statusbar expand-notifications', icon: 'chevron-down' },
@@ -87,12 +76,12 @@ export const TEMPLATE_LIBRARY: TemplateCategory[] = [
             { type: 'function', name: '收起面板', command: 'cmd statusbar collapse', icon: 'chevron-up' },
 
             // 触控模拟
-            { type: 'function', name: '点击(tap)', command: 'input tap 【x】 【y】', icon: 'gesture-tap' },
-            { type: 'function', name: '滑动(swipe)', command: 'input swipe 【x1】 【y1】 【x2】 【y2】 【duration_ms】', icon: 'gesture-swipe' },
+            // { type: 'function', name: '点击(tap)', command: 'input tap 【x】 【y】', icon: 'gesture-tap' },
+            // { type: 'function', name: '滑动(swipe)', command: 'input swipe 【x1】 【y1】 【x2】 【y2】 【duration_ms】', icon: 'gesture-swipe' },
             { type: 'function', name: '输入文本', command: 'input text "hello"', icon: 'form-textbox' },
 
             // 截图
-            { type: 'function', name: '截屏(示例)', command: 'screencap -p /sdcard/Download/screenshot.png', icon: 'camera' },
+            // { type: 'function', name: '截屏(示例)', command: 'screencap -p /sdcard/Download/screenshot.png', icon: 'camera' },
         ],
     },
 
@@ -135,19 +124,24 @@ export const TEMPLATE_LIBRARY: TemplateCategory[] = [
     },
 
     {
-        title: '功能组合',
+        title: '打开应用',
         data: [
-            { type: 'function', name: '打开相机(示例)', command: 'am start -a android.media.action.IMAGE_CAPTURE', icon: 'camera-outline' },
-            { type: 'function', name: '打开设置(示例)', command: 'am start -a android.settings.SETTINGS', icon: 'cog-outline' },
-            {
-                type: 'function',
-                name: '示例：屏幕亮则截屏',
-                command:
-                    `if dumpsys power | grep -q "Display Power: state=ON"; then
-  screencap -p /sdcard/Download/screenshot.png
-fi`,
-                icon: 'layers-triple-outline',
-            },
+            { type: 'function', name: '打开相机', command: 'am start -a android.media.action.IMAGE_CAPTURE', icon: 'camera-outline' },
+            { type: 'function', name: '打开设置', command: 'am start -a android.settings.SETTINGS', icon: 'cog-outline' },
+            { type: 'function', name: '打开应用', command: 'am start -n com.example.app/.MainActivity', icon: 'application-outline' },
+
+            // 新增：王者荣耀
+            { type: 'function', name: '打开王者荣耀', command: 'am start -n com.tencent.tmgp.sgame/com.tencent.tmgp.sgame.SGameActivity', icon: 'game-controller-outline' },
+
+            // 新增：原神（不同渠道包名可能不同，这里用“最稳”的 monkey 启动方式）
+            { type: 'function', name: '打开原神', command: 'am start -n com.miHoYo.Yuanshen/com.miHoYo.GetuiOppoActivity', icon: 'game-controller-outline' },
+
+            { type: 'function', name: '微信扫一扫(不稳定)', command: 'am start -n com.tencent.mm/com.tencent.mm.plugin.scanner.ui.BaseScanUI', icon: 'qrcode-scan' },
+            { type: 'function', name: '微信付款码', command: 'am start -n com.tencent.mm/com.tencent.mm.plugin.offline.ui.WalletOfflineCoinPurseUI', icon: 'barcode' },
+            { type: 'function', name: '支付宝扫一扫', command: 'am start -a android.intent.action.VIEW -d "alipayqr://platformapi/startapp?saId=10000007"', icon: 'qrcode-scan' },
+            { type: 'function', name: '支付宝付款码(不稳定)', command: 'am start -a android.intent.action.VIEW -d "alipayqr://platformapi/startapp?saId=20000056"', icon: 'barcode' },
+            // 新增：抖音
+            { type: 'function', name: '打开抖音', command: 'am start -n com.ss.android.ugc.aweme/com.ss.android.ugc.aweme.splash.SplashActivity', icon: 'play-circle-outline' },
         ],
     },
 ];
@@ -203,11 +197,20 @@ const ScriptConfigScreen = () => {
     const [renameName, setRenameName] = useState('');
     const [renameError, setRenameError] = useState('');
 
+    const [saveSnackbarVisible, setSaveSnackbarVisible] = useState(false);
+
     // 从store初始化本地状态
     useEffect(() => {
         setLocalScripts(savedScripts);
         setSaveName(currentScriptName);
     }, [savedScripts, currentScriptName]);
+
+    // 退出页面时清空草稿
+    useEffect(() => {
+        return () => {
+            clearScripts();
+        };
+    }, [clearScripts]);
 
     const handleAddTemplate = (template: TemplateItem) => {
         const newStep: ScriptStep = {
@@ -265,6 +268,7 @@ const ScriptConfigScreen = () => {
         saveScript(saveName, localScripts);
         setCurrentScriptName(saveName);
         setIsSaveDialogVisible(false);
+        setSaveSnackbarVisible(true);
     };
 
     // 加载脚本
@@ -455,15 +459,13 @@ const ScriptConfigScreen = () => {
                                             {!isCollapsed && category.data.map((template, tIndex) => (
                                                 <TouchableOpacity
                                                     key={tIndex}
-                                                    style={{ flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, marginBottom: 8, elevation: 0, backgroundColor: theme.colors.surfaceVariant, marginLeft: 1 }}
+                                                    style={{ flexDirection: 'row', alignItems: 'center', height: 40, borderRadius: 8, marginBottom: 8, elevation: 0, backgroundColor: theme.colors.surfaceVariant, marginLeft: 1 }}
                                                     onPress={() => handleAddTemplate(template)}
                                                     activeOpacity={0.7}
                                                 >
-                                                    {/* <MaterialCommunityIcons name={template.icon} size={18} color={theme.colors.onSurface} /> */}
                                                     <Text variant="bodySmall" numberOfLines={1} style={{ marginLeft: 8, flex: 1 }}>
                                                         {template.name}
                                                     </Text>
-                                                    {/* <MaterialCommunityIcons name="plus-circle-outline" size={16} color={theme.colors.primary} /> */}
                                                 </TouchableOpacity>
                                             ))}
                                             <Divider style={{ marginVertical: 12 }} />
@@ -535,7 +537,6 @@ const ScriptConfigScreen = () => {
 
                 {/* Portal for Dialogs */}
                 <Portal>
-                    {/* General Confirmation Dialog */}
                     <Dialog visible={confirmDialog.visible} onDismiss={() => setConfirmDialog(prev => ({ ...prev, visible: false }))}>
                         <Dialog.Title>{confirmDialog.title}</Dialog.Title>
                         <Dialog.Content>
@@ -556,7 +557,6 @@ const ScriptConfigScreen = () => {
                                 value={saveName}
                                 onChangeText={setSaveName}
                                 mode="outlined"
-                                autoFocus
                                 error={!!saveError}
                             />
                             {!!saveError && <Text style={{ color: theme.colors.error, marginTop: 4 }}>{saveError}</Text>}
@@ -586,6 +586,14 @@ const ScriptConfigScreen = () => {
                             <Button onPress={handleConfirmRename}>确定</Button>
                         </Dialog.Actions>
                     </Dialog>
+                    <Snackbar
+                        visible={saveSnackbarVisible}
+                        onDismiss={() => setSaveSnackbarVisible(false)}
+                        duration={2000}
+                        style={{ borderRadius: 16 }}
+                    >
+                        保存成功
+                    </Snackbar>
                 </Portal>
             </View>
         </GestureHandlerRootView>
