@@ -206,7 +206,9 @@ class ApiService {
       console.log('Response text:', responseText);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}, body: ${responseText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status}, body: ${responseText}`,
+        );
       }
 
       const responseData = JSON.parse(responseText);
@@ -242,7 +244,9 @@ class ApiService {
   }
   async getFileSize(file_path: string): Promise<number> {
     try {
-      const response = await fetch(`${API_BASE_URL}/fileinfo.php?fp=${file_path}`);
+      const response = await fetch(
+        `${API_BASE_URL}/fileinfo.php?fp=${file_path}`,
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -272,7 +276,12 @@ class ApiService {
     }
   }
 
-  async getUpdataInfo(): Promise<{ version: number, version_name: string, updates: string, download: string }> {
+  async getUpdataInfo(): Promise<{
+    version: number;
+    version_name: string;
+    updates: string;
+    download: string;
+  }> {
     try {
       const response = await fetch(`${API_BASE_URL}/vapi/app.json`);
 
@@ -280,7 +289,7 @@ class ApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = JSON.parse(await response.text());
       return data;
     } catch (error) {
       console.error('Error fetching update info:', error);
@@ -292,7 +301,6 @@ class ApiService {
       };
     }
   }
-
 }
 
 export default new ApiService();

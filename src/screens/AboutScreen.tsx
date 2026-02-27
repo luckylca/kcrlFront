@@ -1,23 +1,23 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ScrollView, Animated, Linking, Easing, Dimensions } from 'react-native';
-import { Card, Text, Button, useTheme, Avatar, TouchableRipple, Surface, Portal, Dialog, Snackbar } from 'react-native-paper';
+import { View, ScrollView, Animated, Linking, Easing, Alert } from 'react-native';
+import { Card, Text, Button, useTheme, Avatar, TouchableRipple, Surface, Portal, Dialog, Snackbar, ProgressBar } from 'react-native-paper';
 import ActionCard from './component/ActionCard';
 import { Appbar } from 'react-native-paper';
 import ApiService from '../api/OLAPI';
 import DeviceInfo from 'react-native-device-info';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
+
+const API_BASE_URL = 'http://47.113.189.138/';
 
 
 const AboutScreen = ({ navigation }: any) => {
     const theme = useTheme();
 
-    const orginUpdateInfo = {
-        version: 1,
-        version_name: '1.0 Preview',
-        updates: '暂无更新',
-        download: '暂无更新',
-    };
-
+    const [currentVersion, setCurrentVersion] = useState(0);
+    const [currentVersionName, setCurrentVersionName] = useState('1.0 Preview');
     const [updateInfo, setUpdateInfo] = useState({
         version: 1,
         version_name: '1.0 Preview',
@@ -28,7 +28,11 @@ const AboutScreen = ({ navigation }: any) => {
     const [dialogVisible, setDialogVisible] = useState(false);
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [checking, setChecking] = useState(false);
+    const [downloading, setDownloading] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
+    const [apkSize, setApkSize] = useState(0);
 
+    // Animation values for staggered entry
     const fadeAnim1 = useRef(new Animated.Value(0)).current;
     const slideAnim1 = useRef(new Animated.Value(50)).current;
 
@@ -77,16 +81,22 @@ const AboutScreen = ({ navigation }: any) => {
     };
 
     useEffect(() => {
-        checkUpdate()
+        setCurrentVersion(Number(DeviceInfo.getBuildNumber()));
+        setCurrentVersionName(DeviceInfo.getVersion() || '1.0 Preview');
+        checkUpdate();
     }, []);
 
-    const checkUpdate = () => {
+    const checkUpdate = async () => {
         setChecking(true);
-        ApiService.getUpdataInfo().then((res: any) => {
+        ApiService.getUpdataInfo().then(async (res: any) => {
+            setUpdateInfo(res);
             const currentBuild = Number(DeviceInfo.getBuildNumber());
-            console.log(res, currentBuild)
+            console.log(currentBuild, res);
+
             if (res.version > currentBuild) {
-                setUpdateInfo(res);
+                const relativePath = res.download.replace(API_BASE_URL, '');
+                const fileSize = await ApiService.getFileSize(relativePath);
+                setApkSize(fileSize);
                 setDialogVisible(true);
             } else {
                 setSnackbarVisible(true);
@@ -96,6 +106,63 @@ const AboutScreen = ({ navigation }: any) => {
         }).finally(() => {
             setChecking(false);
         });
+    };
+
+    const downloadAPK = async () => {
+        try {
+            setDownloading(true);
+            setDownloadProgress(0);
+
+            const downloadUrl = updateInfo.download;
+            const fileName = downloadUrl.substring(downloadUrl.lastIndexOf('/') + 1);
+            const savePath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+            const download = RNFS.downloadFile({
+                fromUrl: downloadUrl,
+                toFile: savePath,
+                progress: (res) => {
+                    if (apkSize > 0) {
+                        setDownloadProgress(res.bytesWritten / apkSize);
+                    }
+                },
+                progressDivider: 1,
+            });
+
+            const result = await download.promise;
+
+            if (result.statusCode === 200) {
+                setDownloading(false);
+                setDownloadProgress(0);
+                setDialogVisible(false);
+
+                try {
+                    await Share.open({
+                        url: `file://${savePath}`,
+                        type: 'application/vnd.android.package-archive',
+                        showAppsToView: true,
+                    });
+                    Alert.alert('下载成功', '正在启动安装...');
+                } catch (e) {
+                    console.error('Open APK error:', e);
+                    try {
+                        await Linking.openURL(`file://${savePath}`);
+                        Alert.alert('下载成功', '正在启动安装...');
+                    } catch (e2) {
+                        console.error('Open APK with file:// error:', e2);
+                        Alert.alert('下载成功', `文件已保存到: ${savePath}\n请手动打开安装`);
+                    }
+                }
+            } else {
+                setDownloading(false);
+                setDownloadProgress(0);
+                Alert.alert('下载失败', `状态码: ${result.statusCode}`);
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            setDownloading(false);
+            setDownloadProgress(0);
+            Alert.alert('下载错误', String(error));
+        }
     };
 
     // 渐进动画组件
@@ -127,155 +194,285 @@ const AboutScreen = ({ navigation }: any) => {
 
 
     return (
-        <ScrollView
-            style={{ flex: 1, backgroundColor: theme.colors.background }}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
-            showsVerticalScrollIndicator={false}
-        >
-            <Appbar.Header>
-                <Appbar.BackAction onPress={() => navigation.goBack()} />
-                <Appbar.Content title="关于" />
-            </Appbar.Header>
-            {/* 项目信息 */}
-            <AnimatedWrapper index={0} style={{ marginBottom: 16 }}>
-                <Card style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: theme.colors.surface }}>
-                    <Card.Cover
-                        source={{ uri: 'https://picsum.photos/id/10/800/400' }}
-                        style={{ height: 150 }}
-                    />
-                    <Card.Title
-                        title="KCtrl Manager"
-                        subtitle="Android按键映射管理工具"
-                        titleStyle={{ fontWeight: 'bold', color: theme.colors.onSurface }}
-                        subtitleStyle={{ opacity: 0.7, color: theme.colors.onSurfaceVariant }}
-                        left={(props) => <Avatar.Icon {...props} icon="application-brackets-outline" style={{ backgroundColor: theme.colors.primaryContainer }} color={theme.colors.onPrimaryContainer} />}
-                    />
-                    <Card.Content>
-                        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                            KCtrl Manager 是一款专为 Android 设备设计的按键映射管理工具，旨在帮助用户轻松自定义按键功能,支持单击，双击和长按等多种触发方式。
-                        </Text>
-                    </Card.Content>
-                </Card>
-            </AnimatedWrapper>
-
-            {/* 交流群 */}
-            <AnimatedWrapper index={1} style={{ marginBottom: 16 }}>
-                <ActionCard
-                    icon="account-group"
-                    title="侧键控制器交流群"
-                    subtitle="群号：764576035"
-                    onPress={() => openLink('https://qm.qq.com/q/5jRKZnZLuw')}
-                    containerColor={theme.colors.secondaryContainer}
-                    contentColor={theme.colors.onSecondaryContainer}
+      <ScrollView
+        style={{ flex: 1, backgroundColor: theme.colors.background }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Appbar.Header>
+          <Appbar.BackAction onPress={() => navigation.goBack()} />
+          <Appbar.Content title="关于" />
+        </Appbar.Header>
+        {/* 1. Project Info Card */}
+        <AnimatedWrapper index={0} style={{ marginBottom: 16 }}>
+          <Card
+            style={{
+              borderRadius: 24,
+              overflow: 'hidden',
+              backgroundColor: theme.colors.surface,
+            }}
+          >
+            <Card.Cover
+              source={{ uri: 'https://picsum.photos/id/10/800/400' }}
+              style={{ height: 150 }}
+            />
+            <Card.Title
+              title="KCtrl Manager"
+              subtitle="Android按键映射管理工具"
+              titleStyle={{ fontWeight: 'bold', color: theme.colors.onSurface }}
+              subtitleStyle={{
+                opacity: 0.7,
+                color: theme.colors.onSurfaceVariant,
+              }}
+              left={props => (
+                <Avatar.Icon
+                  {...props}
+                  icon="application-brackets-outline"
+                  style={{ backgroundColor: theme.colors.primaryContainer }}
+                  color={theme.colors.onPrimaryContainer}
                 />
-            </AnimatedWrapper>
+              )}
+            />
+            <Card.Content>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                KCtrl Manager 是一款专为 Android
+                设备设计的按键映射管理工具，旨在帮助用户轻松自定义按键功能,支持单击，双击和长按等多种触发方式。
+              </Text>
+            </Card.Content>
+          </Card>
+        </AnimatedWrapper>
 
-            {/* 开发者信息 */}
-            <AnimatedWrapper index={2} style={{ marginBottom: 16 }}>
-                <ActionCard
-                    icon="code-tags"
-                    title="开发者信息"
-                    subtitle="查看源代码和贡献者"
-                    onPress={() => navigation.navigate('Developer')}
-                    containerColor={theme.colors.tertiaryContainer}
-                    contentColor={theme.colors.onTertiaryContainer}
-                />
-            </AnimatedWrapper>
+        {/* 2. Community Group Button */}
+        <AnimatedWrapper index={1} style={{ marginBottom: 16 }}>
+          <ActionCard
+            icon="account-group"
+            title="侧键控制器交流群"
+            subtitle="群号：764576035"
+            onPress={() => openLink('https://qm.qq.com/q/5jRKZnZLuw')}
+            containerColor={theme.colors.secondaryContainer}
+            contentColor={theme.colors.onSecondaryContainer}
+          />
+        </AnimatedWrapper>
 
-            {/* 官方文档 */}
-            <AnimatedWrapper index={3} style={{ marginBottom: 16 }}>
-                <ActionCard
-                    icon="web"
-                    title="官方网站"
-                    subtitle="文档与更新"
-                    onPress={() => openLink('http://47.113.189.138/')}
-                    containerColor={theme.colors.surfaceVariant}
-                    contentColor={theme.colors.onSurfaceVariant}
-                />
-            </AnimatedWrapper>
+        {/* 3. Developer Info Button */}
+        <AnimatedWrapper index={2} style={{ marginBottom: 16 }}>
+          <ActionCard
+            icon="code-tags"
+            title="开发者信息"
+            subtitle="查看源代码和贡献者"
+            onPress={() => navigation.navigate('Developer')}
+            containerColor={theme.colors.tertiaryContainer}
+            contentColor={theme.colors.onTertiaryContainer}
+          />
+        </AnimatedWrapper>
 
-            {/* 版本信息 */}
-            <AnimatedWrapper index={4} style={{ marginBottom: 16 }}>
-                <Card style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: theme.colors.surface, height: 60 }}>
-                    <Card.Content style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
-                        <View>
-                            <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.onSurface }}>{orginUpdateInfo.version_name}</Text>
-                            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>Build {orginUpdateInfo.version}</Text>
-                        </View>
-                        <Button
-                            mode="contained-tonal"
-                            onPress={checkUpdate}
-                            icon="update"
-                            style={{ borderRadius: 50 }}
-                            loading={checking}
-                            disabled={checking}
-                        >
-                            检查更新
-                        </Button>
-                    </Card.Content>
-                </Card>
-            </AnimatedWrapper>
+        {/* 4. Official Website Button */}
+        <AnimatedWrapper index={3} style={{ marginBottom: 16 }}>
+          <ActionCard
+            icon="web"
+            title="官方网站"
+            subtitle="文档与更新"
+            onPress={() => openLink('http://47.113.189.138/')}
+            containerColor={theme.colors.surfaceVariant}
+            contentColor={theme.colors.onSurfaceVariant}
+          />
+        </AnimatedWrapper>
 
-            <View style={{ height: 40 }} />
-
-            {/* Update Available Dialog */}
-            <Portal>
-                <Dialog
-                    visible={dialogVisible}
-                    onDismiss={() => setDialogVisible(false)}
-                    style={{ borderRadius: 28, backgroundColor: theme.colors.surface }}
+        {/* 5. Version Info Card */}
+        <AnimatedWrapper index={4} style={{ marginBottom: 16 }}>
+          <Card
+            style={{
+              borderRadius: 24,
+              overflow: 'hidden',
+              backgroundColor: theme.colors.surface,
+            }}
+          >
+            <Card.Content
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingVertical: 8,
+              }}
+            >
+              <View>
+                <Text
+                  variant="titleMedium"
+                  style={{ fontWeight: 'bold', color: theme.colors.onSurface }}
                 >
-                    <Dialog.Icon icon="cellphone-arrow-down" size={32} />
-                    <Dialog.Title style={{ textAlign: 'center', fontWeight: '600' }}>发现新版本</Dialog.Title>
-                    <Dialog.Content>
-                        <View style={{ alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 50, marginBottom: 16, backgroundColor: theme.colors.primaryContainer }}>
-                            <Text variant="labelLarge" style={{ color: theme.colors.onPrimaryContainer, fontWeight: '600' }}>
-                                v{updateInfo.version_name}
-                            </Text>
-                        </View>
-                        <Text variant="titleSmall" style={{ fontWeight: '600', marginBottom: 8, color: theme.colors.onSurface }}>
-                            更新内容
-                        </Text>
-                        <View style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.surfaceVariant }}>
-                            <ScrollView style={{ height: 100 }}>
-                                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 22 }}>
-                                    {updateInfo.updates}
-                                </Text>
-                            </ScrollView>
-                        </View>
-                    </Dialog.Content>
-                    <Dialog.Actions style={{ paddingHorizontal: 16, paddingBottom: 16, gap: 8 }}>
-                        <Button
-                            onPress={() => setDialogVisible(false)}
-                            textColor={theme.colors.onSurfaceVariant}
-                            style={{ borderRadius: 50 }}
-                        >
-                            取消
-                        </Button>
-                        <Button
-                            mode="contained"
-                            onPress={() => {
-                                setDialogVisible(false);
-                                Linking.openURL(updateInfo.download).catch(() => { });
-                            }}
-                            icon="download"
-                            style={{ borderRadius: 50 }}
-                        >
-                            立即更新
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-                <Snackbar
-                    visible={snackbarVisible}
-                    onDismiss={() => setSnackbarVisible(false)}
-                    duration={2500}
-                    style={{ borderRadius: 16, position: 'absolute', bottom: 50, marginLeft: "10%", marginRight: "10%" }}
-                    action={{ label: '好的', onPress: () => setSnackbarVisible(false) }}
+                  {currentVersionName}
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.outline }}
                 >
-                    当前已是最新版本
-                </Snackbar>
-            </Portal>
-        </ScrollView>
+                  Build {currentVersion}
+                </Text>
+              </View>
+              <Button
+                mode="contained-tonal"
+                onPress={checkUpdate}
+                icon="update"
+                style={{ borderRadius: 50 }}
+                loading={checking}
+                disabled={checking}
+              >
+                检查更新
+              </Button>
+            </Card.Content>
+          </Card>
+        </AnimatedWrapper>
+
+        <View style={{ height: 40 }} />
+
+        {/* Update Available Dialog */}
+        <Portal>
+          <Dialog
+            visible={dialogVisible}
+            onDismiss={() => setDialogVisible(false)}
+            style={{ borderRadius: 28, backgroundColor: theme.colors.surface }}
+          >
+            <Dialog.Icon icon="cellphone-arrow-down" size={32} />
+            <Dialog.Title style={{ textAlign: 'center', fontWeight: '600' }}>
+              发现新版本
+            </Dialog.Title>
+            <Dialog.Content>
+              <View
+                style={{
+                  alignSelf: 'center',
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  borderRadius: 50,
+                  marginBottom: 16,
+                  backgroundColor: theme.colors.surfaceVariant,
+                }}
+              >
+                <Text
+                  variant="labelMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                    fontWeight: '600',
+                  }}
+                >
+                  {currentVersionName} (Build {currentVersion})
+                </Text>
+              </View>
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <MaterialCommunityIcons name="arrow-down" size={24} color={theme.colors.primary} />
+              </View>
+              <View
+                style={{
+                  alignSelf: 'center',
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  borderRadius: 50,
+                  marginBottom: 16,
+                  backgroundColor: theme.colors.primaryContainer,
+                }}
+              >
+                <Text
+                  variant="labelLarge"
+                  style={{
+                    color: theme.colors.onPrimaryContainer,
+                    fontWeight: '600',
+                  }}
+                >
+                  v{updateInfo.version_name}
+                </Text>
+              </View>
+              <Text
+                variant="titleSmall"
+                style={{
+                  fontWeight: '600',
+                  marginBottom: 8,
+                  color: theme.colors.onSurface,
+                }}
+              >
+                更新内容
+              </Text>
+              <Text
+                variant="bodySmall"
+                style={{
+                  color: theme.colors.outline,
+                  marginBottom: 8,
+                }}
+              >
+                APK大小: {apkSize > 0 ? `${(apkSize / 1024 / 1024).toFixed(2)} MB` : '获取中...'}
+              </Text>
+              <View
+                style={{
+                  borderRadius: 16,
+                  padding: 16,
+                  backgroundColor: theme.colors.surfaceVariant,
+                  maxHeight: 200,
+                }}
+              >
+                <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      color: theme.colors.onSurfaceVariant,
+                      lineHeight: 22,
+                    }}
+                  >
+                    {updateInfo.updates}
+                  </Text>
+                </ScrollView>
+              </View>
+              {downloading && (
+                <View style={{ marginTop: 16 }}>
+                  <Text variant="bodySmall" style={{ color: theme.colors.outline, marginBottom: 8 }}>
+                    下载进度
+                  </Text>
+                  <ProgressBar progress={downloadProgress} />
+                  <Text variant="bodySmall" style={{ color: theme.colors.outline, marginTop: 4, textAlign: 'center' }}>
+                    {Math.round(downloadProgress * 100)}%
+                  </Text>
+                </View>
+              )}
+            </Dialog.Content>
+            <Dialog.Actions
+              style={{ paddingHorizontal: 16, paddingBottom: 16, gap: 8 }}
+            >
+              <Button
+                onPress={() => setDialogVisible(false)}
+                textColor={theme.colors.onSurfaceVariant}
+                style={{ borderRadius: 50 }}
+              >
+                取消
+              </Button>
+              <Button
+                mode="contained"
+                onPress={downloadAPK}
+                icon="download"
+                style={{ borderRadius: 50 }}
+                loading={downloading}
+                disabled={downloading}
+              >
+                {downloading ? '下载中...' : '立即更新'}
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+          <Snackbar
+            visible={snackbarVisible}
+            onDismiss={() => setSnackbarVisible(false)}
+            duration={2500}
+            style={{
+              borderRadius: 16,
+              position: 'absolute',
+              bottom: 50,
+              marginLeft: '10%',
+              marginRight: '10%',
+            }}
+            action={{ label: '好的', onPress: () => setSnackbarVisible(false) }}
+          >
+            当前已是最新版本
+          </Snackbar>
+        </Portal>
+      </ScrollView>
     );
 };
 
