@@ -218,25 +218,16 @@ const DeveloperScreen = ({ navigation }: any) => {
                         <MaterialCommunityIcons name="account-group" size={32} color={theme.colors.onPrimaryContainer} />
                         <View style={{ marginLeft: 16, flex: 1 }}>
                             <Text variant="titleLarge" style={{ fontWeight: 'bold', color: theme.colors.onPrimaryContainer }}>
-                                KCtrl 开发团队
-                            </Text>
-                            <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer, opacity: 0.7, marginTop: 2 }}>
-                                用热爱构建工具，用代码改变体验
+                                KCtrl 开发者
                             </Text>
                         </View>
                     </Surface>
                 </Animated.View>
 
-                {/* ── Section: Developers ── */}
-                <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 14, color: theme.colors.onBackground }}>
-                    团队成员
-                </Text>
-
                 {DEVELOPERS.map((dev, index) => (
                     <DeveloperCard key={dev.name} dev={dev} theme={theme} delay={150 + index * 150} />
                 ))}
 
-                {/* ── Section: Repositories ── */}
                 <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 14, color: theme.colors.onBackground, marginTop: 28 }}>
                     开源仓库
                 </Text>

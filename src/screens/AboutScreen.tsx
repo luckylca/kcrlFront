@@ -11,6 +11,13 @@ import DeviceInfo from 'react-native-device-info';
 const AboutScreen = ({ navigation }: any) => {
     const theme = useTheme();
 
+    const orginUpdateInfo = {
+        version: 1,
+        version_name: '1.0 Preview',
+        updates: '暂无更新',
+        download: '暂无更新',
+    };
+
     const [updateInfo, setUpdateInfo] = useState({
         version: 1,
         version_name: '1.0 Preview',
@@ -22,7 +29,6 @@ const AboutScreen = ({ navigation }: any) => {
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [checking, setChecking] = useState(false);
 
-    // Animation values for staggered entry
     const fadeAnim1 = useRef(new Animated.Value(0)).current;
     const slideAnim1 = useRef(new Animated.Value(50)).current;
 
@@ -78,7 +84,9 @@ const AboutScreen = ({ navigation }: any) => {
         setChecking(true);
         ApiService.getUpdataInfo().then((res: any) => {
             const currentBuild = Number(DeviceInfo.getBuildNumber());
+            console.log(res, currentBuild)
             if (res.version > currentBuild) {
+                setUpdateInfo(res);
                 setDialogVisible(true);
             } else {
                 setSnackbarVisible(true);
@@ -128,7 +136,7 @@ const AboutScreen = ({ navigation }: any) => {
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
                 <Appbar.Content title="关于" />
             </Appbar.Header>
-            {/* 1. Project Info Card */}
+            {/* 项目信息 */}
             <AnimatedWrapper index={0} style={{ marginBottom: 16 }}>
                 <Card style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: theme.colors.surface }}>
                     <Card.Cover
@@ -150,7 +158,7 @@ const AboutScreen = ({ navigation }: any) => {
                 </Card>
             </AnimatedWrapper>
 
-            {/* 2. Community Group Button */}
+            {/* 交流群 */}
             <AnimatedWrapper index={1} style={{ marginBottom: 16 }}>
                 <ActionCard
                     icon="account-group"
@@ -162,7 +170,7 @@ const AboutScreen = ({ navigation }: any) => {
                 />
             </AnimatedWrapper>
 
-            {/* 3. Developer Info Button */}
+            {/* 开发者信息 */}
             <AnimatedWrapper index={2} style={{ marginBottom: 16 }}>
                 <ActionCard
                     icon="code-tags"
@@ -174,7 +182,7 @@ const AboutScreen = ({ navigation }: any) => {
                 />
             </AnimatedWrapper>
 
-            {/* 4. Official Website Button */}
+            {/* 官方文档 */}
             <AnimatedWrapper index={3} style={{ marginBottom: 16 }}>
                 <ActionCard
                     icon="web"
@@ -186,13 +194,13 @@ const AboutScreen = ({ navigation }: any) => {
                 />
             </AnimatedWrapper>
 
-            {/* 5. Version Info Card */}
+            {/* 版本信息 */}
             <AnimatedWrapper index={4} style={{ marginBottom: 16 }}>
-                <Card style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: theme.colors.surface }}>
+                <Card style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: theme.colors.surface, height: 60 }}>
                     <Card.Content style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
                         <View>
-                            <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.onSurface }}>{updateInfo.version_name}</Text>
-                            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>Build {updateInfo.version}</Text>
+                            <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.onSurface }}>{orginUpdateInfo.version_name}</Text>
+                            <Text variant="bodySmall" style={{ color: theme.colors.outline }}>Build {orginUpdateInfo.version}</Text>
                         </View>
                         <Button
                             mode="contained-tonal"
@@ -229,9 +237,11 @@ const AboutScreen = ({ navigation }: any) => {
                             更新内容
                         </Text>
                         <View style={{ borderRadius: 16, padding: 16, backgroundColor: theme.colors.surfaceVariant }}>
-                            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 22 }}>
-                                {updateInfo.updates}
-                            </Text>
+                            <ScrollView style={{ height: 100 }}>
+                                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 22 }}>
+                                    {updateInfo.updates}
+                                </Text>
+                            </ScrollView>
                         </View>
                     </Dialog.Content>
                     <Dialog.Actions style={{ paddingHorizontal: 16, paddingBottom: 16, gap: 8 }}>

@@ -72,6 +72,18 @@ const PostDetailScreen = ({ navigation, route }: any) => {
                 if (result.success && result.data) {
                     const postData = Array.isArray(result.data) ? result.data[0] : result.data;
                     setFullPost(postData);
+                    if (postData.category === "script") {
+                        setFullPost({ ...postData, category: "脚本" })
+                    }
+                    else if (postData.category === "extension") {
+                        setFullPost({ ...postData, category: "扩展" })
+                    }
+                    else if (postData.category === "theme") {
+                        setFullPost({ ...postData, category: "主题" })
+                    }
+                    else {
+                        setFullPost({ ...postData, category: "其他" })
+                    }
                     console.log("postData", postData);
                 }
             }).finally(() => setLoading(false));

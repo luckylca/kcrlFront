@@ -53,8 +53,8 @@ const KeyConfigScreen = ({ navigation }: any) => {
     const handleSelectScript = (scriptName: string) => {
         if (currentEditingKey && currentEditingTrigger) {
             const currentConfig = keyevent[currentEditingKey] || {};
-            const finalScriptName = scriptName && !scriptName.endsWith('.sh') 
-                ? `${scriptName}.sh` 
+            const finalScriptName = scriptName && !scriptName.endsWith('.sh')
+                ? `${scriptName}.sh`
                 : scriptName;
             setKeyevent({
                 ...keyevent,
@@ -100,7 +100,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
 
             monitorRef.current = new KeyInputMonitor();
             const started = await monitorRef.current.start(socketRef.current, devicePath);
-            
+
             if (!started) {
                 setScanError('启动按键监听失败');
                 return;
@@ -108,7 +108,7 @@ const KeyConfigScreen = ({ navigation }: any) => {
 
             scanIntervalRef.current = setInterval(async () => {
                 if (!monitorRef.current) return;
-                
+
                 try {
                     const result = await monitorRef.current.get();
                     if (result && result.keycode) {
@@ -161,7 +161,6 @@ const KeyConfigScreen = ({ navigation }: any) => {
         setScanError(null);
     };
 
-    // --- Render Items ---
 
     const renderKeyCard = (keyCode: string) => {
         const config = keyevent[keyCode];
@@ -169,7 +168,6 @@ const KeyConfigScreen = ({ navigation }: any) => {
 
         return (
             <Surface key={keyCode} style={{ borderRadius: 16, marginBottom: 16, backgroundColor: theme.colors.surface }} elevation={0}>
-                {/* Key Header */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: theme.colors.secondaryContainer }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                         <MaterialCommunityIcons name="usb" size={24} color={theme.colors.onSecondaryContainer} />
@@ -189,8 +187,6 @@ const KeyConfigScreen = ({ navigation }: any) => {
                         onPress={() => handleDeleteKey(keyCode)}
                     />
                 </View>
-
-                {/* Triggers List */}
                 <View style={{ backgroundColor: '#fff', borderColor: theme.colors.outlineVariant, borderWidth: 1, borderTopWidth: 0, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
                     {TRIGGERS.map((trigger, index) => {
                         const scriptName = (config as any)[trigger.key] || '';
@@ -225,7 +221,6 @@ const KeyConfigScreen = ({ navigation }: any) => {
             </Appbar.Header>
 
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 20 }}>
-                {/* Add Key Button at the TOP - Flat with Ripple */}
                 <Button
                     mode="outlined"
                     onPress={() => setIsAddKeyVisible(true)}
@@ -254,7 +249,6 @@ const KeyConfigScreen = ({ navigation }: any) => {
                 )}
             </ScrollView>
 
-            {/* Dialog: Add Key Selection (From Device Paths) */}
             <Portal>
                 <Dialog visible={isAddKeyVisible} onDismiss={() => setIsAddKeyVisible(false)}>
                     <Dialog.Title>选择设备</Dialog.Title>
@@ -313,7 +307,6 @@ const KeyConfigScreen = ({ navigation }: any) => {
                     </Dialog.Actions>
                 </Dialog>
 
-                {/* Dialog: Select Script */}
                 <Dialog visible={isScriptDialogVisible} onDismiss={() => setIsScriptDialogVisible(false)} style={{ maxHeight: '80%' }}>
                     <Dialog.Title>选择脚本</Dialog.Title>
                     <Dialog.ScrollArea>

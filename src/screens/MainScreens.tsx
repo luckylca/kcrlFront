@@ -48,10 +48,7 @@ const MainScreen = ({ navigation, route }: any) => {
 
     return (
         <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-            {/* 使用 PagerView 实现左右滑动 
-               style 设置为透明，以便 App.tsx 的背景图能透出来
-            */}
-            < PagerView
+            <PagerView
                 ref={pagerRef}
                 style={{ flex: 1, backgroundColor: 'transparent' }}
                 initialPage={0}
@@ -77,8 +74,7 @@ const MainScreen = ({ navigation, route }: any) => {
                 </View >
             </PagerView >
 
-            {/* 自定义 TabBar 悬浮在底部 */}
-            < CustomTabBar
+            <CustomTabBar
                 activeIndex={activeIndex}
                 onIndexChange={handleTabPress}
                 routes={routes}
